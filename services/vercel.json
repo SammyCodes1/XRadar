@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/scan-and-publish-testnet",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/scan-and-publish-mainnet",
+      "schedule": "30 0 * * *"
+    }
+  ]
+}

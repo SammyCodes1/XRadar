@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+:root {
+  --void: #0c0b0a;
+  --void-rgb: 12, 11, 10;
+  --ink-rgb: 236, 234, 228;
+  --base: #121110;
+  --raised: #1c1a17;
+  --inset: #161412;
+  --panel: #181614;
+  --line: rgba(236, 234, 228, 0.1);
+  --ink: #eceae4;
+  --ink-muted: #9a968c;
+  --ink-faint: #6b675f;
+  --ink-inverse: #1a100b;
+  --accent: #c45c26;
+  --accent-hot: #d46a2e;
+  --risk-low: #6f8f72;
+  --risk-high: #c44a3a;
+  --on-accent: #eceae4;
+  --bezel-shadow: inset 0 1px 0 rgba(236, 234, 228, 0.08),
+    0 18px 40px rgba(12, 11, 10, 0.28);
+  --well-shadow: inset 0 1px 0 rgba(12, 11, 10, 0.45);
+  --highlight: inset 0 1px 0 rgba(236, 234, 228, 0.08);
+  --body-wash:
+    radial-gradient(900px 480px at 8% -8%, rgba(196, 92, 38, 0.1), transparent 55%),
+    radial-gradient(700px 360px at 96% 0%, rgba(236, 234, 228, 0.035), transparent 48%),
+    linear-gradient(180deg, #161412 0%, #100e0c 42%, #0c0b0a 100%);
+  --grain-opacity: 0.035;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --void: #eceae4;
+  --void-rgb: 236, 234, 228;
+  --ink-rgb: 26, 16, 11;
+  --base: #e4e0d6;
+  --raised: #f7f5ef;
+  --inset: #ddd8ce;
+  --panel: #f2efe7;
+  --line: rgba(26, 16, 11, 0.12);
+  --ink: #1a100b;
+  --ink-muted: #5a544c;
+  --ink-faint: #847e74;
+  --ink-inverse: #eceae4;
+  --accent: #c45c26;
+  --accent-hot: #b44e1c;
+  --risk-low: #3d6a43;
+  --risk-high: #b3382a;
+  --on-accent: #eceae4;
+  --bezel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 14px 32px rgba(26, 16, 11, 0.08);
+  --well-shadow: inset 0 1px 0 rgba(26, 16, 11, 0.06);
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --body-wash:
+    radial-gradient(900px 480px at 8% -8%, rgba(196, 92, 38, 0.09), transparent 55%),
+    radial-gradient(700px 360px at 96% 0%, rgba(26, 16, 11, 0.035), transparent 48%),
+    linear-gradient(180deg, #f3f0e8 0%, #eceae4 46%, #e4e0d6 100%);
+  --grain-opacity: 0.028;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-void: var(--void);
+  --color-base: var(--base);
+  --color-raised: var(--raised);
+  --color-inset: var(--inset);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-accent: var(--accent);
+  --color-accent-hot: var(--accent-hot);
+  --color-risk-low: var(--risk-low);
+  --color-risk-high: var(--risk-high);
+  --color-on-accent: var(--on-accent);
+  --color-background: var(--void);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  background: var(--void);
+}
+
+body {
+  min-height: 100dvh;
+  color: var(--ink);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  background: var(--body-wash);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.page-col {
+  width: 100%;
+  max-width: 70rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .page-col {
+    padding-inline: 1.5rem;
+  }
+}
+
+.theme-icon-sun {
+  display: none;
+}
+
+.theme-icon-moon {
+  display: block;
+}
+
+[data-theme="light"] .theme-icon-sun {
+  display: block;
+}
+
+[data-theme="light"] .theme-icon-moon {
+  display: none;
+}
+
+::selection {
+  background: rgba(196, 92, 38, 0.35);
+  color: var(--ink);
+}
+
+@keyframes scan {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.animate-scan {
+  animation: scan 1.4s ease-in-out infinite;
+}
+
+@keyframes land-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .land-in {
+    animation: land-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+.circuit-current {
+  stroke-dasharray: 18 92;
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .circuit-current {
+    animation: circuit-flow 2.2s linear infinite;
+  }
+}
+
+@keyframes circuit-flow {
+  to {
+    stroke-dashoffset: -110;
+  }
+}
+
+.publish-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(236, 234, 228, 0.16), transparent 42%),
+    linear-gradient(155deg, #d46a2e 0%, #c45c26 46%, #9a3f16 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(236, 234, 228, 0.32),
+    inset 0 -10px 18px rgba(26, 16, 11, 0.18),
+    0 16px 36px rgba(196, 92, 38, 0.16);
+}
+
+.publish-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(26, 16, 11, 0.045) 0 1px,
+      transparent 1px 7px
+    );
+  mix-blend-mode: multiply;
+}
+
+.publish-panel::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  border: 1px solid rgba(26, 16, 11, 0.22);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(236, 234, 228, 0.08);
+}
+
+.publish-panel .publish-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(236, 234, 228, 0.22) 48%,
+    transparent 62%
+  );
+  transform: translateX(-80%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .publish-panel:hover .publish-sheen {
+    animation: publish-sheen 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes publish-sheen {
+  to {
+    transform: translateX(80%);
+  }
+}
+
+.scan-bezel {
+  border-radius: 0.75rem;
+  padding: 0.28rem;
+  background: var(--raised);
+  box-shadow: var(--bezel-shadow);
+  outline: 1px solid var(--line);
+  outline-offset: 0;
+}
+
+.scan-well {
+  border-radius: 0.55rem;
+  background: var(--inset);
+  box-shadow: var(--well-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scan,
+  .animate-ping,
+  .animate-pulse,
+  .animate-spin {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "xradar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered token risk screener dApp on X Layer",
+  "workspaces": [
+    "frontend",
+    "services",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w frontend",
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:services": "npm run dev -w services",
+    "build": "npm run build -w shared && npm run build -w frontend && npm run build -w services",
+    "build:frontend": "npm run build -w frontend",
+    "build:services": "npm run build -w services",
+    "build:shared": "npm run build -w shared",
+    "build:contracts": "forge build --root contracts",
+    "test:contracts": "forge test --root contracts",
+    "test:services": "npm run test -w services",
+    "deploy:testnet": "node scripts/deploy-registry.mjs testnet",
+    "deploy:mainnet": "node scripts/deploy-registry.mjs mainnet"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,12 @@
+# Compiler files
+cache/
+out/
+
+# Broadcast logs stay local. Addresses live in shared/deployedAddresses.json.
+/broadcast/
+
+# Docs
+docs/
+
+# Dotenv file
+.env

@@ -1,0 +1,16 @@
+{
+  "testnet": {
+    "RiskRegistry": "0x6A85d6C8609B52d8B5eb0a9FC5F5174a4BaeeCf3",
+    "chainId": 1952,
+    "oracle": "0x71642aA8c7Ce88Ed823a1DE91646eDe035Ff6Ea6"
+  },
+  "xlayer-testnet": {
+    "RiskRegistry": "0x6A85d6C8609B52d8B5eb0a9FC5F5174a4BaeeCf3",
+    "chainId": 1952
+  },
+  "mainnet": {
+    "RiskRegistry": "0x4720a706Fb1688559f7966ed50D161B275D8D87b",
+    "chainId": 196,
+    "oracle": "0xEB6654d156a0e098825989050Cac69b959579b25"
+  }
+}
