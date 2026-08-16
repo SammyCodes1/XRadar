@@ -1,6 +1,6 @@
 "use client";
 
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { ArrowLeft, MagnifyingGlass } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getAddress, isAddress, type Address } from "viem";
@@ -133,11 +133,27 @@ export function CompareView({
     router.replace(`/compare?${params.toString()}`);
   }
 
+  function onBack() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/scan");
+  }
+
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <SiteHeader />
       <main className="page-col flex-1 py-8 sm:py-10">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex min-h-11 items-center gap-2 rounded-md bg-black px-4 text-sm font-medium text-white ring-1 ring-white/20 hover:bg-[#111] active:scale-[0.98]"
+        >
+          <ArrowLeft className="size-4" weight="bold" />
+          Back
+        </button>
+        <h1 className="mt-6 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           Compare tokens
         </h1>
         <p className="mt-2 max-w-[52ch] text-sm leading-6 text-ink-muted">
