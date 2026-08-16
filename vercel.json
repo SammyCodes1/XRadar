@@ -1,0 +1,38 @@
+{
+  "services": {
+    "web": {
+      "root": "frontend/",
+      "framework": "nextjs",
+      "installCommand": "npm install --prefix .."
+    },
+    "jobs": {
+      "root": "services/",
+      "installCommand": "npm install --prefix ..",
+      "functions": {
+        "api/cron/*.ts": {
+          "maxDuration": 60
+        }
+      }
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/cron/(.*)",
+      "destination": { "service": "jobs" }
+    },
+    {
+      "source": "/(.*)",
+      "destination": { "service": "web" }
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/scan-and-publish-testnet",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/scan-and-publish-mainnet",
+      "schedule": "30 0 * * *"
+    }
+  ]
+}
