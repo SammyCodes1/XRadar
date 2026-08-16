@@ -3,7 +3,7 @@ import { CompareView } from "../../components/compare-view";
 
 export const metadata: Metadata = {
   title: "Compare - XRadar",
-  description: "Compare two X Layer token reports from RiskRegistry.",
+  description: "Compare two X Layer tokens. Unscanned addresses are scanned first.",
 };
 
 type PageProps = {
