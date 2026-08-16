@@ -1,5 +1,7 @@
 export type RiskLevel = "low" | "medium" | "high";
 
+export const SCORE_STALE_SECONDS = 24 * 60 * 60;
+
 export function shortenAddress(address: string): string {
   if (address.length < 12) return address;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -28,4 +30,23 @@ export function timeSince(unixSeconds: number, nowMs = Date.now()): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
+}
+
+export function isScoreStale(unixSeconds: number, nowMs = Date.now()): boolean {
+  if (!unixSeconds) return false;
+  return Math.floor(nowMs / 1000) - unixSeconds >= SCORE_STALE_SECONDS;
+}
+
+export function tokenHref(address: string, chain: string): string {
+  return `/token/${address}?chain=${chain}`;
+}
+
+export function shareCardHref(address: string, chain: string): string {
+  return `/token/${address}/card?chain=${chain}`;
+}
+
+export function compareHref(address: string, chain: string, other?: string): string {
+  const params = new URLSearchParams({ a: address, chain });
+  if (other) params.set("b", other);
+  return `/compare?${params.toString()}`;
 }

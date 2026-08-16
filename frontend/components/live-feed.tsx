@@ -273,9 +273,18 @@ export function LiveFeed() {
                         </a>
                       </div>
                       {name ? (
-                        <p className="mt-1 truncate text-xs text-ink-muted">{name}</p>
+                        <p className="mt-1 truncate text-xs text-ink-muted">
+                          {name}
+                          {decoded.token?.poolOkb
+                            ? ` · ${decoded.token.poolOkb} OKB`
+                            : ""}
+                        </p>
                       ) : (
-                        <p className="mt-1 text-xs text-ink-faint">Unnamed contract</p>
+                        <p className="mt-1 text-xs text-ink-faint">
+                          {decoded.token?.poolOkb
+                            ? `Pool ${decoded.token.poolOkb} OKB`
+                            : "Unnamed contract"}
+                        </p>
                       )}
                     </div>
                     <div className="flex w-full flex-col items-start gap-2 md:w-auto md:flex-row md:items-center md:justify-end md:gap-4">

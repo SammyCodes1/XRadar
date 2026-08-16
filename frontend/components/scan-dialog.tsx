@@ -21,6 +21,7 @@ import { SCAN_STEPS, type ScanMode, type ScanPhase } from "../lib/use-scan-job";
 import type { ScanItem } from "../lib/scan-client";
 import { ScanScore } from "./scan-score";
 import { ScanSummary } from "./scan-summary";
+import { TokenIdentity } from "./token-identity";
 
 type ScanDialogProps = {
   open: boolean;
@@ -251,9 +252,20 @@ function SuccessBody({
         ) : (
           <p className="text-sm text-ink-muted">Published with no numeric score.</p>
         )}
-        <p className="pt-1 text-right text-[11px] text-ink-muted">
-          {result?.stage === "published" ? "On-chain" : result?.stage}
-        </p>
+        <div className="pt-1 text-right">
+          <p className="text-[11px] text-ink-muted">
+            {result?.stage === "published" ? "On-chain · just now" : result?.stage}
+          </p>
+          <div className="mt-2">
+            <TokenIdentity
+              symbol={result?.report?.token?.symbol}
+              name={result?.report?.token?.name}
+              decimals={result?.report?.token?.decimals}
+              poolOkb={result?.report?.token?.poolOkb}
+              align="right"
+            />
+          </div>
+        </div>
       </div>
       <div className="mt-5">
         <ScanSummary

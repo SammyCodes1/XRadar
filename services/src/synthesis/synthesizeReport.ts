@@ -99,6 +99,86 @@ function flagsFromFindings(findings: RiskFindings): RiskFlags {
       ? `deployer=${findings.deployerHistory.deployer}; created=${findings.deployerHistory.contractsCreated ?? "?"}; abandoned=${findings.deployerHistory.abandoned ?? "?"}`
       : findings.deployerHistory.error,
   };
+  flags.thinLiquidity = {
+    key: "thinLiquidity",
+    label: "Thin OKB pool",
+    severity: "high",
+    triggered: findings.liquiditySize.thin === true,
+    detail: findings.liquiditySize.reserveWokbFormatted
+      ? `${findings.liquiditySize.reserveWokbFormatted} OKB`
+      : findings.liquiditySize.error,
+  };
+  flags.proxyUpgradeable = {
+    key: "proxyUpgradeable",
+    label: "Upgradeable proxy",
+    severity: findings.proxy.admin ? "high" : "medium",
+    triggered: findings.proxy.isProxy === true,
+    detail: findings.proxy.implementation
+      ? `impl=${findings.proxy.implementation}${findings.proxy.admin ? `; admin=${findings.proxy.admin}` : ""}`
+      : findings.proxy.error,
+  };
+  flags.tradingLimited = {
+    key: "tradingLimited",
+    label: "Trading limits",
+    severity: "high",
+    triggered:
+      findings.tradingLimits.paused === true ||
+      findings.tradingLimits.tradingOpen === false ||
+      findings.tradingLimits.mintCallable === true ||
+      findings.tradingLimits.blacklistCallable === true,
+    detail: [
+      findings.tradingLimits.paused ? "paused" : null,
+      findings.tradingLimits.tradingOpen === false ? "trading-closed" : null,
+      findings.tradingLimits.mintCallable ? "mint-callable" : null,
+      findings.tradingLimits.blacklistCallable ? "blacklist-callable" : null,
+      findings.tradingLimits.maxTx ? `maxTx=${findings.tradingLimits.maxTx}` : null,
+    ]
+      .filter(Boolean)
+      .join("; ") || findings.tradingLimits.error,
+  };
+  flags.ownerNotDeployer = {
+    key: "ownerNotDeployer",
+    label: "Owner is not deployer",
+    severity: "info",
+    triggered: findings.ownerDeployer.sameWallet === false,
+    detail: findings.ownerDeployer.owner
+      ? `owner=${findings.ownerDeployer.owner}; deployer=${findings.ownerDeployer.deployer ?? "?"}`
+      : findings.ownerDeployer.error,
+  };
+  const transferTaxValue = findings.transferTax.transferTax;
+  flags.transferTax = {
+    key: "transferTax",
+    label: "Pair transfer tax",
+    severity: "high",
+    triggered:
+      findings.transferTax.reverted === true ||
+      (transferTaxValue != null && transferTaxValue >= 20),
+    detail:
+      findings.transferTax.reverted
+        ? "pair transfer reverted"
+        : transferTaxValue != null
+          ? `${transferTaxValue}%`
+          : findings.transferTax.error,
+  };
+  flags.buySellBlocked = {
+    key: "buySellBlocked",
+    label: "Buy/sell blocked",
+    severity: "critical",
+    triggered:
+      findings.buySell.buyOk === false || findings.buySell.sellOk === false,
+    detail:
+      findings.buySell.error ??
+      `buy=${findings.buySell.buyOk ?? "?"} sell=${findings.buySell.sellOk ?? "?"}`,
+  };
+  if (
+    flags.highTax &&
+    !flags.highTax.triggered &&
+    transferTaxValue != null &&
+    transferTaxValue >= 20
+  ) {
+    flags.highTax.triggered = true;
+    flags.highTax.detail = `pair transfer tax ${transferTaxValue}%`;
+  }
   return flags;
 }
 
@@ -107,13 +187,19 @@ function shortAddr(value: string | null | undefined): string {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
-function checksFromFindings(findings: RiskFindings): ReportCheck[] {
+export function checksFromFindings(findings: RiskFindings): ReportCheck[] {
   const verified = findings.verifiedContract;
   const ownership = findings.ownershipStatus;
   const honeypot = findings.honeypotCheck;
   const lp = findings.lpLockStatus;
   const holders = findings.holderConcentration;
   const deployer = findings.deployerHistory;
+  const pool = findings.liquiditySize;
+  const proxy = findings.proxy;
+  const limits = findings.tradingLimits;
+  const owners = findings.ownerDeployer;
+  const tax = findings.transferTax;
+  const swap = findings.buySell;
 
   const ownerBits = [
     ownership.renounced
@@ -126,56 +212,71 @@ function checksFromFindings(findings: RiskFindings): ReportCheck[] {
     ownership.hasPause ? "pausable" : null,
   ].filter(Boolean);
 
+  const limitBits = [
+    limits.paused ? "paused" : null,
+    limits.tradingOpen === false ? "trading closed" : null,
+    limits.mintCallable ? "mint still callable" : null,
+    limits.blacklistCallable ? "blacklist still callable" : null,
+    limits.maxTx ? "max tx set" : null,
+    limits.maxWallet ? "max wallet set" : null,
+  ].filter(Boolean);
+
   return [
     {
       key: "verified",
       label: "Verified contract",
       outcome:
-        verified.status === "unknown"
-          ? "warning"
+        verified.status === "unknown" || verified.verified == null
+          ? "unknown"
           : verified.verified
             ? "pass"
             : "fail",
-      value: verified.verified
-        ? verified.contractName
-          ? `Verified as ${verified.contractName}`
-          : "Source verified on explorer"
-        : (verified.error ?? "Source not verified on explorer"),
+      value:
+        verified.verified
+          ? verified.contractName
+            ? `Verified as ${verified.contractName}`
+            : "Source verified on explorer"
+          : verified.verified === false
+            ? (verified.error ?? "Source not verified on explorer")
+            : (verified.error ?? "Verification data unavailable"),
     },
     {
       key: "ownership",
       label: "Ownership status",
       outcome:
         ownership.status === "unknown"
-          ? "warning"
+          ? "unknown"
           : ownership.hasMint || ownership.hasBlacklist
             ? "fail"
             : ownership.renounced
               ? "pass"
               : "warning",
-      value: ownerBits.join("; "),
+      value: ownerBits.join("; ") || (ownership.error ?? "Ownership unknown"),
     },
     {
       key: "honeypot",
       label: "Honeypot result",
       outcome:
-        honeypot.status === "unknown"
-          ? "warning"
+        honeypot.status === "unknown" || honeypot.isHoneypot == null
+          ? "unknown"
           : honeypot.isHoneypot
             ? "fail"
             : (honeypot.buyTax ?? 0) >= 20 || (honeypot.sellTax ?? 0) >= 20
               ? "warning"
               : "pass",
-      value: honeypot.isHoneypot
-        ? (honeypot.error ?? "Buy or sell reverted (honeypot)")
-        : `Buy tax ${honeypot.buyTax ?? "?"}%, sell tax ${honeypot.sellTax ?? "?"}%`,
+      value:
+        honeypot.isHoneypot
+          ? (honeypot.error ?? "Buy or sell reverted (honeypot)")
+          : honeypot.buyTax != null || honeypot.sellTax != null
+            ? `Buy tax ${honeypot.buyTax ?? "?"}%, sell tax ${honeypot.sellTax ?? "?"}%`
+            : (honeypot.error ?? "Honeypot data unavailable"),
     },
     {
       key: "lpLock",
       label: "LP lock status",
       outcome:
         lp.status === "unknown" || lp.locked == null
-          ? "warning"
+          ? "unknown"
           : lp.locked
             ? "pass"
             : "fail",
@@ -184,14 +285,14 @@ function checksFromFindings(findings: RiskFindings): ReportCheck[] {
           ? `LP locked: ${lp.lockedPercent ?? "?"}% of LP supply`
           : lp.locked === false
             ? "LP unlocked"
-            : (lp.error ?? "LP lock unknown"),
+            : (lp.error ?? "LP lock data unavailable"),
     },
     {
       key: "holders",
       label: "Holder concentration",
       outcome:
         holders.top10Percent == null
-          ? "warning"
+          ? "unknown"
           : holders.top10Percent >= 50
             ? "fail"
             : holders.top10Percent >= 30
@@ -207,13 +308,116 @@ function checksFromFindings(findings: RiskFindings): ReportCheck[] {
       label: "Deployer history",
       outcome:
         deployer.status === "unknown" || !deployer.deployer
-          ? "warning"
+          ? "unknown"
           : (deployer.abandoned ?? 0) >= 3
             ? "fail"
             : "pass",
       value: deployer.deployer
         ? `Deployer ${shortAddr(deployer.deployer)}; ${deployer.contractsCreated ?? "?"} contracts created, ${deployer.abandoned ?? "?"} abandoned`
         : (deployer.error ?? "Deployer unknown"),
+    },
+    {
+      key: "liquiditySize",
+      label: "Pool size",
+      outcome:
+        pool.status === "unknown" || pool.thin == null
+          ? "unknown"
+          : pool.thin
+            ? "fail"
+            : "pass",
+      value: pool.reserveWokbFormatted
+        ? `${pool.reserveWokbFormatted} OKB in the WOKB pair`
+        : (pool.error ?? "Pool size unavailable"),
+    },
+    {
+      key: "proxy",
+      label: "Proxy / implementation",
+      outcome:
+        proxy.status === "unknown" || proxy.isProxy == null
+          ? "unknown"
+          : proxy.isProxy && proxy.admin
+            ? "fail"
+            : proxy.isProxy
+              ? "warning"
+              : "pass",
+      value: proxy.isProxy
+        ? `Proxy${proxy.kind ? ` (${proxy.kind})` : ""}; impl ${shortAddr(proxy.implementation)}${proxy.admin ? `; admin ${shortAddr(proxy.admin)}` : ""}`
+        : proxy.isProxy === false
+          ? "No EIP-1967 or minimal proxy detected"
+          : (proxy.error ?? "Proxy data unavailable"),
+    },
+    {
+      key: "tradingLimits",
+      label: "Trading limits",
+      outcome:
+        limits.status === "unknown"
+          ? "unknown"
+          : limits.paused ||
+              limits.tradingOpen === false ||
+              limits.mintCallable ||
+              limits.blacklistCallable
+            ? "fail"
+            : limits.maxTx || limits.maxWallet
+              ? "warning"
+              : "pass",
+      value:
+        limitBits.length > 0
+          ? limitBits.join("; ")
+          : limits.status === "unknown"
+            ? (limits.error ?? "Trading limit data unavailable")
+            : "No max-tx, pause, or callable mint found",
+    },
+    {
+      key: "ownerDeployer",
+      label: "Owner vs deployer",
+      outcome:
+        owners.status === "unknown" || owners.sameWallet == null
+          ? "unknown"
+          : owners.sameWallet
+            ? "warning"
+            : owners.ownerIsContract
+              ? "pass"
+              : "warning",
+      value:
+        owners.sameWallet
+          ? `Owner matches deployer ${shortAddr(owners.owner)}`
+          : owners.sameWallet === false
+            ? `Owner ${shortAddr(owners.owner)} differs from deployer ${shortAddr(owners.deployer)}${owners.ownerIsContract ? " (owner is a contract)" : ""}`
+            : (owners.error ?? "Could not compare owner and deployer"),
+    },
+    {
+      key: "transferTax",
+      label: "Pair transfer tax",
+      outcome:
+        tax.status === "unknown" ||
+        (tax.transferTax == null && tax.reverted == null)
+          ? "unknown"
+          : tax.reverted || (tax.transferTax ?? 0) >= 20
+            ? "fail"
+            : (tax.transferTax ?? 0) > 0
+              ? "warning"
+              : "pass",
+      value: tax.reverted
+        ? "Transfer from the pair reverted"
+        : tax.transferTax != null
+          ? `${tax.transferTax}% taken on a pair transfer`
+          : (tax.error ?? "Transfer tax unavailable"),
+    },
+    {
+      key: "buySell",
+      label: "Buy then sell",
+      outcome:
+        swap.status === "unknown" || swap.buyOk == null || swap.sellOk == null
+          ? "unknown"
+          : !swap.buyOk || !swap.sellOk
+            ? "fail"
+            : (swap.buyTax ?? 0) >= 20 || (swap.sellTax ?? 0) >= 20
+              ? "warning"
+              : "pass",
+      value:
+        swap.buyOk == null || swap.sellOk == null
+          ? (swap.error ?? "Buy/sell simulation unavailable")
+          : `Buy ${swap.buyOk ? "ok" : "failed"}, sell ${swap.sellOk ? "ok" : "failed"}; tax ${swap.buyTax ?? "?"}% / ${swap.sellTax ?? "?"}%`,
     },
   ];
 }
@@ -236,6 +440,21 @@ export function scoreFromFindings(findings: RiskFindings): RiskScore {
   if (findings.ownershipStatus.hasPause) contract += ownerActive ? 12 : 4;
   if (findings.ownershipStatus.renounced === true) contract -= 10;
   else if (ownerActive) contract += 8;
+  if (findings.proxy.isProxy === true) {
+    contract += findings.proxy.admin ? 10 : 4;
+  }
+  if (
+    findings.tradingLimits.paused === true ||
+    findings.tradingLimits.tradingOpen === false
+  ) {
+    contract += 14;
+  }
+  if (findings.tradingLimits.mintCallable === true && ownerActive) {
+    contract += 6;
+  }
+  if (findings.tradingLimits.blacklistCallable === true && ownerActive) {
+    contract += 6;
+  }
   contract = clamp(contract);
 
   let liquidity: number;
@@ -253,10 +472,26 @@ export function scoreFromFindings(findings: RiskFindings): RiskScore {
   const maxTax = Math.max(
     findings.honeypotCheck.buyTax ?? 0,
     findings.honeypotCheck.sellTax ?? 0,
+    findings.transferTax.transferTax ?? 0,
+    findings.buySell.buyTax ?? 0,
+    findings.buySell.sellTax ?? 0,
   );
   if (maxTax >= 50) liquidity = clamp(liquidity + 28);
   else if (maxTax >= 20) liquidity = clamp(liquidity + 16);
   else if (maxTax >= 10) liquidity = clamp(liquidity + 8);
+
+  if (findings.liquiditySize.thin === true) {
+    const wei = findings.liquiditySize.reserveWokb
+      ? BigInt(findings.liquiditySize.reserveWokb)
+      : 0n;
+    liquidity =
+      wei > 0n && wei < 10n ** 18n
+        ? Math.max(liquidity, 68)
+        : clamp(liquidity + 8);
+  }
+  if (findings.transferTax.reverted === true) {
+    liquidity = Math.max(liquidity, 74);
+  }
 
   const top10 = findings.holderConcentration.top10Percent;
   let holders: number;
@@ -282,7 +517,9 @@ export function scoreFromFindings(findings: RiskFindings): RiskScore {
     social = 18;
   }
 
-  if (findings.honeypotCheck.isHoneypot === true) {
+  const swapBlocked =
+    findings.buySell.buyOk === false || findings.buySell.sellOk === false;
+  if (findings.honeypotCheck.isHoneypot === true || swapBlocked) {
     return {
       overall: 94,
       contract: Math.max(contract, 88),
@@ -318,8 +555,13 @@ function localSummary(findings: RiskFindings, _score: RiskScore): string {
     : "Liquidity lock is unknown or unlocked.";
   const honeypot = findings.honeypotCheck.isHoneypot
     ? "Honeypot detected."
-    : "Not a honeypot.";
-  return `${source} ${ownership} ${liquidity} ${honeypot}`;
+    : findings.buySell.buyOk === false || findings.buySell.sellOk === false
+      ? "Buy or sell simulation failed."
+      : "Not a honeypot.";
+  const pool = findings.liquiditySize.reserveWokbFormatted
+    ? ` Pool is ${findings.liquiditySize.reserveWokbFormatted} OKB.`
+    : "";
+  return `${source} ${ownership} ${liquidity} ${honeypot}${pool}`;
 }
 
 async function maybeDeepSeekSummary(
@@ -376,6 +618,10 @@ export async function synthesizeReport(
     token: {
       address: findings.token,
       chainId: findings.chainId,
+      symbol: findings.tokenMeta.symbol ?? undefined,
+      name: findings.tokenMeta.name ?? undefined,
+      decimals: findings.tokenMeta.decimals ?? undefined,
+      poolOkb: findings.liquiditySize.reserveWokbFormatted ?? undefined,
     },
     flags,
     score,

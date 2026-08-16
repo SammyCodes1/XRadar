@@ -8,7 +8,7 @@ type FlagLike = {
   detail?: string;
 };
 
-const FACT_ORDER = ["Source", "Ownership", "Liquidity", "Honeypot"] as const;
+const FACT_ORDER = ["Source", "Ownership", "Liquidity", "Pool", "Honeypot"] as const;
 
 function setFact(
   map: Map<string, string>,
@@ -73,6 +73,11 @@ function factsFromFlags(
   const honeypot = flags.honeypot;
   if (honeypot) {
     setFact(map, "Honeypot", honeypot.triggered ? "Detected" : "Not detected");
+  }
+
+  const pool = flags.thinLiquidity;
+  if (pool?.detail) {
+    setFact(map, "Pool", pool.detail.includes("OKB") ? pool.detail : `${pool.detail} OKB`);
   }
 
   return map;

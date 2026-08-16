@@ -1,17 +1,24 @@
 import type { Address } from "viem";
 import { getNetwork, type RiskFindings, type XLayerNetwork } from "@xradar/shared";
 import { createXLayerPublicClient } from "../detection/client";
+import { checkBuySell } from "./buySell";
 import { checkDeployerHistory } from "./deployer";
 import { checkHolderConcentration } from "./holders";
 import { checkHoneypot } from "./honeypot";
+import { checkLiquiditySize } from "./liquiditySize";
 import { checkLpLockStatus } from "./lpLock";
+import { checkOwnerDeployer } from "./ownerDeployer";
 import { checkOwnershipStatus } from "./ownership";
+import { checkProxy } from "./proxy";
+import { checkTokenMeta } from "./tokenMeta";
+import { checkTradingLimits } from "./tradingLimits";
+import { checkTransferTax } from "./transferTax";
 import { checkVerifiedContract } from "./verified";
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
 /**
- * Run the six read-only risk checks. Individual checks return
+ * Run read-only risk checks. Individual checks return
  * `{ status: "unknown" }` instead of throwing when data is missing.
  */
 export async function runRiskChecks(
@@ -36,6 +43,12 @@ export async function runRiskChecks(
     lpLockStatus,
     holderConcentration,
     deployerHistory,
+    tokenMeta,
+    liquiditySize,
+    proxy,
+    tradingLimits,
+    transferTax,
+    buySell,
   ] = await Promise.all([
     checkVerifiedContract(token, chain),
     checkOwnershipStatus(client, token, chain),
@@ -43,7 +56,19 @@ export async function runRiskChecks(
     checkLpLockStatus(client, token),
     checkHolderConcentration(client, token, chain),
     checkDeployerHistory(client, token, chain),
+    checkTokenMeta(client, token),
+    checkLiquiditySize(client, token),
+    checkProxy(client, token),
+    checkTradingLimits(client, token),
+    checkTransferTax(client, token),
+    checkBuySell(client, token),
   ]);
+
+  const ownerDeployer = await checkOwnerDeployer(
+    client,
+    ownershipStatus,
+    deployerHistory,
+  );
 
   return {
     token,
@@ -56,5 +81,12 @@ export async function runRiskChecks(
     lpLockStatus,
     holderConcentration,
     deployerHistory,
+    tokenMeta,
+    liquiditySize,
+    proxy,
+    tradingLimits,
+    ownerDeployer,
+    transferTax,
+    buySell,
   };
 }

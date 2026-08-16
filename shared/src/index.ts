@@ -14,6 +14,7 @@ export type TokenIdentity = {
   symbol?: string;
   name?: string;
   decimals?: number;
+  poolOkb?: string;
 };
 
 export type RiskSeverity = "info" | "low" | "medium" | "high" | "critical";
@@ -30,7 +31,12 @@ export type RiskFlagKey =
   | "unverifiedSource"
   | "concentratedHolders"
   | "recentDeploy"
-  | "socialSpam";
+  | "socialSpam"
+  | "thinLiquidity"
+  | "tradingLimited"
+  | "ownerNotDeployer"
+  | "transferTax"
+  | "buySellBlocked";
 
 export type RiskFlag = {
   key: RiskFlagKey;
@@ -61,7 +67,7 @@ export type RiskScore = {
   social: number;
 };
 
-export type FindingOutcome = "pass" | "fail" | "warning";
+export type FindingOutcome = "pass" | "fail" | "warning" | "unknown";
 
 export type ReportCheckKey =
   | "verified"
@@ -69,7 +75,13 @@ export type ReportCheckKey =
   | "honeypot"
   | "lpLock"
   | "holders"
-  | "deployer";
+  | "deployer"
+  | "liquiditySize"
+  | "proxy"
+  | "tradingLimits"
+  | "ownerDeployer"
+  | "transferTax"
+  | "buySell";
 
 export type ReportCheck = {
   key: ReportCheckKey;
@@ -133,6 +145,13 @@ export type {
   LpLockFinding,
   HolderConcentrationFinding,
   DeployerHistoryFinding,
+  TokenMetaFinding,
+  LiquiditySizeFinding,
+  ProxyFinding,
+  TradingLimitsFinding,
+  OwnerDeployerFinding,
+  TransferTaxFinding,
+  BuySellFinding,
   RiskFindings,
 } from "./types.js";
 

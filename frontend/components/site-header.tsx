@@ -69,7 +69,10 @@ function NetworkSwitch({
   );
 }
 
-function Brand({ onScanner }: { onScanner: boolean }) {
+function Brand({ pathname }: { pathname: string }) {
+  const onScanner = pathname === "/scan" || pathname.startsWith("/token/");
+  const onWatchlist = pathname === "/watchlist";
+  const onCompare = pathname === "/compare";
   return (
     <div className="flex min-w-0 items-center gap-3">
       <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="XRadar home">
@@ -89,6 +92,24 @@ function Brand({ onScanner }: { onScanner: boolean }) {
         >
           Scanner
         </Link>
+        <Link
+          href="/watchlist"
+          className={`transition-colors hover:text-ink ${
+            onWatchlist ? "text-ink" : "text-ink-muted"
+          }`}
+          aria-current={onWatchlist ? "page" : undefined}
+        >
+          Watchlist
+        </Link>
+        <Link
+          href="/compare"
+          className={`transition-colors hover:text-ink ${
+            onCompare ? "text-ink" : "text-ink-muted"
+          }`}
+          aria-current={onCompare ? "page" : undefined}
+        >
+          Compare
+        </Link>
       </nav>
     </div>
   );
@@ -97,17 +118,28 @@ function Brand({ onScanner }: { onScanner: boolean }) {
 export function SiteHeader() {
   const { network, setNetwork } = useDashboard();
   const pathname = usePathname();
-  const onScanner = pathname === "/scan" || pathname.startsWith("/token/");
-
   return (
     <header className="sticky top-0 z-20 border-b border-line/80 bg-void/72 pt-[env(safe-area-inset-top)] backdrop-blur-md">
       <div className="page-col">
         <div className="flex h-14 items-center justify-between gap-2 sm:hidden">
-          <Brand onScanner={onScanner} />
+          <Brand pathname={pathname} />
           <div className="flex shrink-0 items-center gap-1.5">
             <NetworkSwitch network={network} setNetwork={setNetwork} />
             <ThemeToggle />
           </div>
+        </div>
+        <div className="flex items-center justify-between gap-3 pb-2 text-[11px] sm:hidden">
+          <nav className="flex items-center gap-3 text-ink-muted" aria-label="Product">
+            <Link href="/scan" className="hover:text-ink">
+              Scanner
+            </Link>
+            <Link href="/watchlist" className="hover:text-ink">
+              Watchlist
+            </Link>
+            <Link href="/compare" className="hover:text-ink">
+              Compare
+            </Link>
+          </nav>
         </div>
         <div className="flex justify-stretch pb-3 sm:hidden">
           <div className="w-full">
@@ -116,7 +148,7 @@ export function SiteHeader() {
         </div>
 
         <div className="hidden h-16 items-center justify-between gap-4 sm:flex">
-          <Brand onScanner={onScanner} />
+          <Brand pathname={pathname} />
           <div className="flex items-center justify-end gap-2">
             <NetworkBadge network={network} />
             <NetworkSwitch network={network} setNetwork={setNetwork} />

@@ -18,6 +18,14 @@ export type ScanItem = {
     flags?: Record<string, ScanFlag>;
     score?: { overall?: number };
     checks?: unknown;
+    generatedAt?: string;
+    token?: {
+      symbol?: string;
+      name?: string;
+      decimals?: number;
+      poolOkb?: string;
+      address?: string;
+    };
   };
 };
 

@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   ArrowSquareOut,
   ArrowsClockwise,
+  ArrowsLeftRight,
+  Clock,
   WarningCircle,
 } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,7 +16,7 @@ import { getAddress, isAddress } from "viem";
 import type { Address } from "viem";
 import { useReadContract } from "wagmi";
 import type { XLayerNetwork } from "@xradar/shared";
-import { timeSince } from "../lib/format";
+import { compareHref, isScoreStale, timeSince } from "../lib/format";
 import {
   RISK_REGISTRY_ABI,
   explorerTokenUrl,
@@ -28,6 +30,9 @@ import { FindingList } from "./finding-list";
 import { ScanDialog } from "./scan-dialog";
 import { ScanSummary } from "./scan-summary";
 import { ScoreGauge } from "./score-gauge";
+import { ShareActions } from "./share-actions";
+import { TokenIdentity } from "./token-identity";
+import { WatchButton } from "./watch-button";
 
 export function TokenDetail({
   address: rawAddress,
@@ -77,6 +82,7 @@ export function TokenDetail({
   const checks = useMemo(() => checksForReport(report), [report]);
   const score = onChain?.score ?? report.score?.overall ?? 0;
   const summary = report.summary;
+  const stale = scanned && isScoreStale(Number(onChain!.timestamp), now);
 
   function setChain(next: XLayerNetwork) {
     setNetwork(next);
@@ -142,13 +148,14 @@ export function TokenDetail({
                   <ArrowSquareOut className="size-3.5" weight="bold" />
                 </a>
               </div>
-              {report.token?.symbol || report.token?.name ? (
-                <p className="mt-2 text-sm text-ink-muted">
-                  {[report.token?.symbol, report.token?.name]
-                    .filter(Boolean)
-                    .join(" ")}
-                </p>
-              ) : null}
+              <div className="mt-2">
+                <TokenIdentity
+                  symbol={report.token?.symbol}
+                  name={report.token?.name}
+                  decimals={report.token?.decimals}
+                  poolOkb={report.token?.poolOkb}
+                />
+              </div>
             </div>
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <div
@@ -179,6 +186,23 @@ export function TokenDetail({
                   Mainnet
                 </button>
               </div>
+              {token ? (
+                <WatchButton
+                  address={token}
+                  chain={network}
+                  symbol={report.token?.symbol}
+                  name={report.token?.name}
+                />
+              ) : null}
+              {token ? (
+                <Link
+                  href={compareHref(token, network)}
+                  className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm text-ink-muted ring-1 ring-line hover:bg-raised hover:text-ink sm:min-h-0 sm:flex-none"
+                >
+                  <ArrowsLeftRight className="size-4" weight="bold" />
+                  Compare
+                </Link>
+              ) : null}
               <button
                 type="button"
                 disabled={job.phase === "running"}
@@ -222,11 +246,22 @@ export function TokenDetail({
             </div>
           ) : null}
 
+          {stale ? (
+            <div className="mt-6 flex items-start gap-2 rounded-lg bg-panel p-4 text-sm ring-1 ring-accent/35">
+              <Clock className="mt-0.5 size-4 shrink-0 text-accent" weight="bold" />
+              <p className="text-ink">
+                This score is {timeSince(Number(onChain!.timestamp), now)} old.
+                Rescan to refresh the checks.
+              </p>
+            </div>
+          ) : null}
+
           {!scoreQuery.isLoading && scanned ? (
             <div className="mt-8 grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
               <aside className="rounded-lg bg-panel px-5 py-6 ring-1 ring-line">
                 <ScoreGauge score={score} />
                 <p className="mt-4 text-center font-mono text-xs text-ink-muted">
+                  {stale ? "Stale · " : ""}
                   Scanned {timeSince(Number(onChain!.timestamp), now)}
                 </p>
                 {report.model ? (
@@ -251,12 +286,33 @@ export function TokenDetail({
                     Deterministic checks
                   </h2>
                   <p className="mt-1 text-sm text-ink-muted">
-                    Decoded from the on-chain reportURI. No off-chain database.
+                    Decoded from the on-chain reportURI. Unknown means the
+                    check could not finish. Fail means it ran and found a
+                    problem.
                   </p>
                   <div className="mt-4">
                     <FindingList checks={checks} />
                   </div>
                 </section>
+
+                {token ? (
+                  <section className="rounded-lg bg-panel p-5 ring-1 ring-line sm:p-6">
+                    <h2 className="text-lg font-semibold tracking-tight text-ink">
+                      Share
+                    </h2>
+                    <p className="mt-1 text-sm text-ink-muted">
+                      Copy the report link or open a screenshot card.
+                    </p>
+                    <div className="mt-4">
+                      <ShareActions
+                        address={token}
+                        chain={network}
+                        symbol={report.token?.symbol}
+                        score={score}
+                      />
+                    </div>
+                  </section>
+                ) : null}
               </div>
             </div>
           ) : null}

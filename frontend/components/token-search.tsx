@@ -14,6 +14,9 @@ import { useDashboard } from "./dashboard-provider";
 import { ScanDialog } from "./scan-dialog";
 import { ScanScore } from "./scan-score";
 import { ScanSummary } from "./scan-summary";
+import { ShareActions } from "./share-actions";
+import { TokenIdentity } from "./token-identity";
+import { WatchButton } from "./watch-button";
 
 export function TokenSearch() {
   const { network, chainId, setLastScanned } = useDashboard();
@@ -173,8 +176,17 @@ export function TokenSearch() {
                     )}
                     <div className="min-w-0 flex-1 sm:text-right">
                       <p className="text-[11px] text-ink-muted">
-                        {job.result?.stage === "published" ? "Published on-chain" : job.result?.stage}
+                        {job.result?.stage === "published" ? "Published on-chain · just now" : job.result?.stage}
                       </p>
+                      <div className="mt-2">
+                        <TokenIdentity
+                          symbol={job.result?.report?.token?.symbol}
+                          name={job.result?.report?.token?.name}
+                          decimals={job.result?.report?.token?.decimals}
+                          poolOkb={job.result?.report?.token?.poolOkb}
+                          align="right"
+                        />
+                      </div>
                       <p className="mt-1 truncate font-mono text-sm text-ink">
                         {job.result?.token}
                       </p>
@@ -195,7 +207,25 @@ export function TokenSearch() {
                     flags={job.result?.report?.flags}
                   />
                 </div>
-                <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  {job.result?.token ? (
+                    <WatchButton
+                      address={job.result.token}
+                      chain={network}
+                      symbol={job.result.report?.token?.symbol}
+                      name={job.result.report?.token?.name}
+                    />
+                  ) : null}
+                  {job.result?.token ? (
+                    <ShareActions
+                      address={job.result.token}
+                      chain={network}
+                      symbol={job.result.report?.token?.symbol}
+                      score={typeof score === "number" ? score : undefined}
+                    />
+                  ) : null}
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                   {job.result?.txHash ? (
                     <a
                       href={explorerTxUrl(chainId, job.result.txHash)}

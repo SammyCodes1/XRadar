@@ -12,5 +12,12 @@ export type {
   LpLockFinding,
   HolderConcentrationFinding,
   DeployerHistoryFinding,
+  TokenMetaFinding,
+  LiquiditySizeFinding,
+  ProxyFinding,
+  TradingLimitsFinding,
+  OwnerDeployerFinding,
+  TransferTaxFinding,
+  BuySellFinding,
   RiskFindings,
 } from "./src/types.ts";

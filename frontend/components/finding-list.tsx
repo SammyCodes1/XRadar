@@ -1,5 +1,6 @@
 import {
   CheckCircle,
+  MinusCircle,
   WarningCircle,
   XCircle,
 } from "@phosphor-icons/react";
@@ -21,6 +22,10 @@ const OUTCOME_STYLE: Record<
     wrap: "text-accent",
     label: "Warning",
   },
+  unknown: {
+    wrap: "text-ink-muted",
+    label: "Unknown",
+  },
 };
 
 function OutcomeIcon({ outcome }: { outcome: FindingOutcome }) {
@@ -30,6 +35,9 @@ function OutcomeIcon({ outcome }: { outcome: FindingOutcome }) {
   if (outcome === "fail") {
     return <XCircle className="size-5 shrink-0" weight="fill" />;
   }
+  if (outcome === "unknown") {
+    return <MinusCircle className="size-5 shrink-0" weight="regular" />;
+  }
   return <WarningCircle className="size-5 shrink-0" weight="fill" />;
 }
 
@@ -37,7 +45,7 @@ export function FindingList({ checks }: { checks: ReportCheck[] }) {
   return (
     <ul className="divide-y divide-line">
       {checks.map((check) => {
-        const style = OUTCOME_STYLE[check.outcome];
+        const style = OUTCOME_STYLE[check.outcome] ?? OUTCOME_STYLE.unknown;
         return (
           <li key={check.key} className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0">
             <span className={`mt-0.5 ${style.wrap}`} aria-hidden>

@@ -67,6 +67,70 @@ export type DeployerHistoryFinding = {
   error?: string;
 };
 
+export type TokenMetaFinding = {
+  status: CheckStatus;
+  name: string | null;
+  symbol: string | null;
+  decimals: number | null;
+  error?: string;
+};
+
+export type LiquiditySizeFinding = {
+  status: CheckStatus;
+  pair?: Address;
+  reserveWokb?: string;
+  reserveWokbFormatted?: string;
+  thin: boolean | null;
+  error?: string;
+};
+
+export type ProxyFinding = {
+  status: CheckStatus;
+  isProxy: boolean | null;
+  kind: "eip1967" | "eip1167" | "implementation-fn" | null;
+  implementation: Address | null;
+  admin: Address | null;
+  error?: string;
+};
+
+export type TradingLimitsFinding = {
+  status: CheckStatus;
+  maxTx: string | null;
+  maxWallet: string | null;
+  paused: boolean | null;
+  tradingOpen: boolean | null;
+  mintCallable: boolean | null;
+  blacklistCallable: boolean | null;
+  error?: string;
+};
+
+export type OwnerDeployerFinding = {
+  status: CheckStatus;
+  owner: Address | null;
+  deployer: Address | null;
+  sameWallet: boolean | null;
+  ownerIsContract: boolean | null;
+  error?: string;
+};
+
+export type TransferTaxFinding = {
+  status: CheckStatus;
+  transferTax: number | null;
+  reverted: boolean | null;
+  method: "pair-transfer" | null;
+  error?: string;
+};
+
+export type BuySellFinding = {
+  status: CheckStatus;
+  buyOk: boolean | null;
+  sellOk: boolean | null;
+  buyTax: number | null;
+  sellTax: number | null;
+  pair?: Address;
+  error?: string;
+};
+
 export type RiskFindings = {
   token: Address;
   chain: XLayerNetwork;
@@ -78,4 +142,11 @@ export type RiskFindings = {
   lpLockStatus: LpLockFinding;
   holderConcentration: HolderConcentrationFinding;
   deployerHistory: DeployerHistoryFinding;
+  tokenMeta: TokenMetaFinding;
+  liquiditySize: LiquiditySizeFinding;
+  proxy: ProxyFinding;
+  tradingLimits: TradingLimitsFinding;
+  ownerDeployer: OwnerDeployerFinding;
+  transferTax: TransferTaxFinding;
+  buySell: BuySellFinding;
 };

@@ -40,6 +40,17 @@ export const KNOWN_LOCKERS: readonly { address: Address; label: string }[] = [
 export const HONEYPOT_TAX_THRESHOLD = 50;
 export const HONEYPOT_BUY_WEI = 10n ** 16n; // 0.01 OKB
 export const ABANDONED_TRANSFER_WINDOW_SEC = 30 * 24 * 60 * 60;
+export const THIN_LIQUIDITY_OKB_WEI = 5n * 10n ** 18n;
+export const VERY_THIN_LIQUIDITY_OKB_WEI = 1n * 10n ** 18n;
+
+/** EIP-1967 storage slots. */
+export const EIP1967_IMPLEMENTATION_SLOT =
+  "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc" as const;
+export const EIP1967_ADMIN_SLOT =
+  "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103" as const;
+
+export const TRANSFER_TAX_SINK: Address =
+  "0x1111111111111111111111111111111111111111";
 
 export const SELECTORS = {
   owner: "8da5cb5b",
@@ -77,6 +88,13 @@ export const erc20Abi = [
   {
     type: "function",
     name: "symbol",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "string" }],
+  },
+  {
+    type: "function",
+    name: "name",
     stateMutability: "view",
     inputs: [],
     outputs: [{ type: "string" }],

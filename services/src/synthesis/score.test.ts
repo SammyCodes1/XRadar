@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { RiskFindings } from "@xradar/shared";
-import { scoreFromFindings } from "./synthesizeReport";
+import { checksFromFindings, scoreFromFindings } from "./synthesizeReport";
 
 function base(over: Partial<RiskFindings> = {}): RiskFindings {
   return {
@@ -44,6 +44,54 @@ function base(over: Partial<RiskFindings> = {}): RiskFindings {
       contractsCreated: 1,
       stillLiquid: 1,
       abandoned: 0,
+    },
+    tokenMeta: {
+      status: "ok",
+      name: "Clean",
+      symbol: "CLN",
+      decimals: 18,
+    },
+    liquiditySize: {
+      status: "ok",
+      reserveWokb: (50n * 10n ** 18n).toString(),
+      reserveWokbFormatted: "50.00",
+      thin: false,
+    },
+    proxy: {
+      status: "ok",
+      isProxy: false,
+      kind: null,
+      implementation: null,
+      admin: null,
+    },
+    tradingLimits: {
+      status: "ok",
+      maxTx: null,
+      maxWallet: null,
+      paused: false,
+      tradingOpen: true,
+      mintCallable: false,
+      blacklistCallable: false,
+    },
+    ownerDeployer: {
+      status: "ok",
+      owner: "0x0000000000000000000000000000000000000000",
+      deployer: "0x0000000000000000000000000000000000000002",
+      sameWallet: false,
+      ownerIsContract: false,
+    },
+    transferTax: {
+      status: "ok",
+      transferTax: 0,
+      reverted: false,
+      method: "pair-transfer",
+    },
+    buySell: {
+      status: "ok",
+      buyOk: true,
+      sellOk: true,
+      buyTax: 1,
+      sellTax: 1,
     },
     ...over,
   };
@@ -133,6 +181,35 @@ describe("scoreFromFindings", () => {
           contractsCreated: 6,
           stillLiquid: 1,
           abandoned: 4,
+        },
+      }),
+    );
+    assert.ok(score.overall >= 67, `expected high, got ${score.overall}`);
+  });
+
+  it("labels missing pool data as unknown, not fail", () => {
+    const checks = checksFromFindings(
+      base({
+        liquiditySize: {
+          status: "unknown",
+          thin: null,
+          error: "no WOKB Uniswap V2 pair with reserves",
+        },
+      }),
+    );
+    const pool = checks.find((check) => check.key === "liquiditySize");
+    assert.equal(pool?.outcome, "unknown");
+  });
+
+  it("treats a failed buy/sell simulation as high risk", () => {
+    const score = scoreFromFindings(
+      base({
+        buySell: {
+          status: "ok",
+          buyOk: true,
+          sellOk: false,
+          buyTax: 0,
+          sellTax: null,
         },
       }),
     );

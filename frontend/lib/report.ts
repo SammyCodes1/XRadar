@@ -13,25 +13,43 @@ export type DecodedRiskReport = {
   checks?: ReportCheck[];
   generatedAt?: string;
   model?: string;
-  token?: { symbol?: string; name?: string; address?: string };
+  token?: {
+    symbol?: string;
+    name?: string;
+    address?: string;
+    decimals?: number;
+    poolOkb?: string;
+  };
 };
 
-const CHECK_ORDER: ReportCheckKey[] = [
+export const CHECK_ORDER: ReportCheckKey[] = [
   "verified",
   "ownership",
   "honeypot",
   "lpLock",
+  "liquiditySize",
   "holders",
   "deployer",
+  "proxy",
+  "tradingLimits",
+  "ownerDeployer",
+  "transferTax",
+  "buySell",
 ];
 
-const CHECK_LABEL: Record<ReportCheckKey, string> = {
+export const CHECK_LABEL: Record<ReportCheckKey, string> = {
   verified: "Verified contract",
   ownership: "Ownership status",
   honeypot: "Honeypot result",
   lpLock: "LP lock status",
   holders: "Holder concentration",
   deployer: "Deployer history",
+  liquiditySize: "Pool size",
+  proxy: "Proxy / implementation",
+  tradingLimits: "Trading limits",
+  ownerDeployer: "Owner vs deployer",
+  transferTax: "Pair transfer tax",
+  buySell: "Buy then sell",
 };
 
 export function decodeReportUri(uri: string): DecodedRiskReport {
@@ -85,6 +103,12 @@ function deriveChecks(report: DecodedRiskReport): ReportCheck[] {
   const unlocked = flagTriggered(flags, "liquidityUnlocked");
   const concentrated = flagTriggered(flags, "concentratedHolders");
   const deployerFlag = flagTriggered(flags, "recentDeploy");
+  const thin = flagTriggered(flags, "thinLiquidity");
+  const proxy = flagTriggered(flags, "proxyUpgradeable");
+  const limited = flagTriggered(flags, "tradingLimited");
+  const ownerDiff = flagTriggered(flags, "ownerNotDeployer");
+  const transferTax = flagTriggered(flags, "transferTax");
+  const buySell = flagTriggered(flags, "buySellBlocked");
 
   const ownerParts = [
     renounced
@@ -102,11 +126,7 @@ function deriveChecks(report: DecodedRiskReport): ReportCheck[] {
       key: "verified",
       label: CHECK_LABEL.verified,
       outcome:
-        unverified === undefined
-          ? "warning"
-          : unverified
-            ? "fail"
-            : "pass",
+        unverified === undefined ? "unknown" : unverified ? "fail" : "pass",
       value:
         flagDetail(flags, "unverifiedSource") ??
         (unverified
@@ -123,7 +143,9 @@ function deriveChecks(report: DecodedRiskReport): ReportCheck[] {
           ? "fail"
           : renounced
             ? "pass"
-            : "warning",
+            : renounced === undefined && !mint && !blacklist && !pause
+              ? "unknown"
+              : "warning",
       value:
         ownerParts.length > 0
           ? ownerParts.join("; ")
@@ -138,7 +160,7 @@ function deriveChecks(report: DecodedRiskReport): ReportCheck[] {
           ? "warning"
           : honeypot === false
             ? "pass"
-            : "warning",
+            : "unknown",
       value:
         flagDetail(flags, "honeypot") ??
         (honeypot
@@ -153,7 +175,7 @@ function deriveChecks(report: DecodedRiskReport): ReportCheck[] {
       key: "lpLock",
       label: CHECK_LABEL.lpLock,
       outcome:
-        unlocked === undefined ? "warning" : unlocked ? "fail" : "pass",
+        unlocked === undefined ? "unknown" : unlocked ? "fail" : "pass",
       value:
         flagDetail(flags, "liquidityUnlocked") ??
         (unlocked
@@ -167,7 +189,7 @@ function deriveChecks(report: DecodedRiskReport): ReportCheck[] {
       label: CHECK_LABEL.holders,
       outcome:
         concentrated === undefined
-          ? "warning"
+          ? "unknown"
           : concentrated
             ? "fail"
             : "pass",
@@ -184,14 +206,67 @@ function deriveChecks(report: DecodedRiskReport): ReportCheck[] {
       key: "deployer",
       label: CHECK_LABEL.deployer,
       outcome:
-        deployerFlag === undefined
-          ? "warning"
-          : deployerFlag
-            ? "fail"
-            : "pass",
+        deployerFlag === undefined ? "unknown" : deployerFlag ? "fail" : "pass",
       value:
         flagDetail(flags, "recentDeploy") ??
         "Deployer history not in this report",
+    },
+    {
+      key: "liquiditySize",
+      label: CHECK_LABEL.liquiditySize,
+      outcome: thin === undefined ? "unknown" : thin ? "fail" : "pass",
+      value:
+        flagDetail(flags, "thinLiquidity") ??
+        (report.token?.poolOkb
+          ? `${report.token.poolOkb} OKB in the WOKB pair`
+          : "Pool size not in this report"),
+    },
+    {
+      key: "proxy",
+      label: CHECK_LABEL.proxy,
+      outcome: proxy === undefined ? "unknown" : proxy ? "warning" : "pass",
+      value:
+        flagDetail(flags, "proxyUpgradeable") ??
+        (proxy
+          ? "Upgradeable proxy detected"
+          : proxy === false
+            ? "No proxy detected"
+            : "Proxy data not in this report"),
+    },
+    {
+      key: "tradingLimits",
+      label: CHECK_LABEL.tradingLimits,
+      outcome: limited === undefined ? "unknown" : limited ? "fail" : "pass",
+      value:
+        flagDetail(flags, "tradingLimited") ??
+        (limited
+          ? "Trading limits or callable mint/blacklist"
+          : "Trading limit data not in this report"),
+    },
+    {
+      key: "ownerDeployer",
+      label: CHECK_LABEL.ownerDeployer,
+      outcome: ownerDiff === undefined ? "unknown" : "warning",
+      value:
+        flagDetail(flags, "ownerNotDeployer") ??
+        "Owner vs deployer not in this report",
+    },
+    {
+      key: "transferTax",
+      label: CHECK_LABEL.transferTax,
+      outcome:
+        transferTax === undefined ? "unknown" : transferTax ? "fail" : "pass",
+      value:
+        flagDetail(flags, "transferTax") ??
+        "Pair transfer tax not in this report",
+    },
+    {
+      key: "buySell",
+      label: CHECK_LABEL.buySell,
+      outcome: buySell === undefined ? "unknown" : buySell ? "fail" : "pass",
+      value:
+        flagDetail(flags, "buySellBlocked") ??
+        "Buy/sell simulation not in this report",
     },
   ];
 
@@ -206,7 +281,7 @@ export function checksForReport(report: DecodedRiskReport): ReportCheck[] {
         byKey.get(key) ?? {
           key,
           label: CHECK_LABEL[key],
-          outcome: "warning" as FindingOutcome,
+          outcome: "unknown" as FindingOutcome,
           value: "Not published in this report",
         },
     );
