@@ -54,7 +54,7 @@ export type HolderConcentrationFinding = {
   status: CheckStatus;
   top10Percent: number | null;
   holderSampleSize?: number;
-  method: "explorer" | "transfer-logs" | null;
+  method: "explorer" | "transfer-logs" | "on-chain" | null;
   error?: string;
 };
 

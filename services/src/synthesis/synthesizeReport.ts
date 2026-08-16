@@ -303,7 +303,11 @@ export function checksFromFindings(findings: RiskFindings): ReportCheck[] {
               : "pass",
       value:
         holders.top10Percent != null
-          ? `Top 10 holders: ${holders.top10Percent}% of supply`
+          ? `Top 10 sampled wallets: ${holders.top10Percent}% of supply${
+              holders.holderSampleSize
+                ? ` (${holders.holderSampleSize} wallets checked)`
+                : ""
+            }`
           : (holders.error ?? "Holder data unavailable"),
     },
     {

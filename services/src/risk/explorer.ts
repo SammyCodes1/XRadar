@@ -90,33 +90,43 @@ export async function fetchTokenHolders(
   limit = 20,
 ): Promise<ExplorerHolder[] | null> {
   const paths = [
-    "token/token-position-list",
-    "token/position-list",
+    "token/token-holder-list",
     "token/holder-list",
+    "token/position-list",
+    "token/token-position-list",
+  ];
+  const queries: Record<string, string>[] = [
+    { tokenContractAddress: address, limit: String(limit) },
+    { tokenAddress: address, limit: String(limit) },
+    { contractAddress: address, limit: String(limit) },
   ];
   for (const path of paths) {
-    const result = await oklinkGet(path, {
-      chainShortName: chainShortName(chain),
-      tokenContractAddress: address,
-      limit: String(limit),
-    });
-    if (!result.ok) continue;
-    const rows = Array.isArray(result.data)
-      ? result.data
-      : asRecord(result.data)?.["positionList"] ??
-        asRecord(result.data)?.["holderList"];
-    if (!Array.isArray(rows)) continue;
-    const holders: ExplorerHolder[] = [];
-    for (const row of rows) {
-      const rec = asRecord(row);
-      if (!rec) continue;
-      const addr = String(
-        rec.holderAddress ?? rec.address ?? rec.holder ?? "",
-      );
-      const amount = String(rec.amount ?? rec.balance ?? rec.value ?? "");
-      if (addr.startsWith("0x")) holders.push({ address: addr, amount });
+    for (const query of queries) {
+      const result = await oklinkGet(path, {
+        chainShortName: chainShortName(chain),
+        ...query,
+      });
+      if (!result.ok) continue;
+      const rows = Array.isArray(result.data)
+        ? result.data
+        : asRecord(result.data)?.["positionList"] ??
+          asRecord(result.data)?.["holderList"] ??
+          asRecord(result.data)?.["tokenHolderList"];
+      if (!Array.isArray(rows)) continue;
+      const holders: ExplorerHolder[] = [];
+      for (const row of rows) {
+        const rec = asRecord(row);
+        if (!rec) continue;
+        const addr = String(
+          rec.holderAddress ?? rec.address ?? rec.holder ?? "",
+        );
+        const amount = String(
+          rec.amount ?? rec.balance ?? rec.holdAmount ?? rec.value ?? "",
+        );
+        if (addr.startsWith("0x")) holders.push({ address: addr, amount });
+      }
+      if (holders.length > 0) return holders;
     }
-    if (holders.length > 0) return holders;
   }
   return null;
 }
