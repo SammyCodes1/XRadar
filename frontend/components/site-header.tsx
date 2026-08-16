@@ -81,7 +81,7 @@ function Brand({ pathname }: { pathname: string }) {
         </span>
         <span className="text-sm font-semibold tracking-tight text-ink">XRadar</span>
       </Link>
-      <nav className="hidden items-center gap-2 text-sm sm:flex" aria-label="Product">
+      <nav className="hidden items-center gap-6 text-sm sm:flex" aria-label="Product">
         <span className="text-ink-faint">/</span>
         <Link
           href="/scan"
@@ -129,7 +129,7 @@ export function SiteHeader() {
           </div>
         </div>
         <div className="flex items-center justify-between gap-3 pb-2 text-[11px] sm:hidden">
-          <nav className="flex items-center gap-3 text-ink-muted" aria-label="Product">
+          <nav className="flex items-center gap-5 text-ink-muted" aria-label="Product">
             <Link href="/scan" className="hover:text-ink">
               Scanner
             </Link>
