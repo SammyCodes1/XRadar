@@ -27,20 +27,20 @@ export function LandingHeader() {
 
   return (
     <motion.header
-      className="fixed inset-x-0 top-0 z-30 border-b border-transparent"
+      className="fixed inset-x-0 top-0 z-30 border-b border-transparent pt-[env(safe-area-inset-top)]"
       style={reduce ? undefined : headerStyle}
       initial={reduce ? false : { opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={iosSpring}
     >
-      <div className="flex h-16 w-full items-center justify-between gap-4 px-5 sm:px-8">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="XRadar">
-          <span className="flex size-8 items-center justify-center rounded-md bg-raised ring-1 ring-line">
+      <div className="flex h-14 w-full items-center justify-between gap-2 px-4 sm:h-16 sm:gap-4 sm:px-8">
+        <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-2.5" aria-label="XRadar">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-raised ring-1 ring-line">
             <Scan className="size-4 text-accent" weight="bold" />
           </span>
-          <span className="text-sm font-semibold tracking-tight">XRadar</span>
+          <span className="truncate text-sm font-semibold tracking-tight">XRadar</span>
         </Link>
-        <nav className="flex items-center gap-3 text-sm sm:gap-5">
+        <nav className="flex shrink-0 items-center gap-2 text-sm sm:gap-5">
           <a
             href="#method"
             className="hidden text-ink-muted transition-colors hover:text-ink sm:inline"
@@ -57,9 +57,10 @@ export function LandingHeader() {
           <motion.div whileHover={reduce ? undefined : { scale: 1.03 }} whileTap={{ scale: 0.97 }}>
             <Link
               href="/scan"
-              className="inline-flex h-8 items-center rounded-md bg-accent px-3 text-xs font-medium text-on-accent hover:bg-accent-hot"
+              className="inline-flex h-9 items-center rounded-md bg-accent px-3 text-xs font-medium text-on-accent hover:bg-accent-hot sm:h-8"
             >
-              Open the scanner
+              <span className="sm:hidden">Scanner</span>
+              <span className="hidden sm:inline">Open the scanner</span>
             </Link>
           </motion.div>
         </nav>

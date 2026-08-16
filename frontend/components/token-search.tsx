@@ -71,7 +71,7 @@ export function TokenSearch() {
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={iosSpring}
         >
-          <h1 className="max-w-[14ch] text-balance text-4xl font-semibold tracking-tight text-ink sm:text-5xl lg:text-[3.35rem] lg:leading-[0.95]">
+          <h1 className="max-w-[14ch] text-balance text-[2.15rem] font-semibold tracking-tight text-ink sm:text-5xl lg:text-[3.35rem] lg:leading-[0.95]">
             Screen a token
           </h1>
           <p className="mt-3 max-w-[42ch] text-sm leading-6 text-ink-muted sm:text-[15px] sm:leading-7">
@@ -129,14 +129,14 @@ export function TokenSearch() {
                 autoCapitalize="off"
                 placeholder="0x..."
                 disabled={job.phase === "running"}
-                className="min-h-14 w-full flex-1 rounded-md bg-transparent px-4 font-mono text-sm text-ink outline-none placeholder:text-ink-faint focus:ring-0 disabled:opacity-60"
+                className="min-h-12 w-full flex-1 rounded-md bg-transparent px-4 font-mono text-base text-ink outline-none placeholder:text-ink-faint focus:ring-0 disabled:opacity-60 sm:min-h-14 sm:text-sm"
               />
               <motion.button
                 type="submit"
                 disabled={job.phase === "running"}
                 whileHover={reduce || job.phase === "running" ? undefined : { scale: 1.02 }}
                 whileTap={job.phase === "running" ? undefined : { scale: 0.97 }}
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-md bg-accent px-6 text-sm font-medium text-on-accent hover:bg-accent-hot disabled:opacity-60"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-accent px-6 text-sm font-medium text-on-accent hover:bg-accent-hot disabled:opacity-60 sm:min-h-14"
               >
                 <MagnifyingGlass className="size-4" weight="bold" />
                 {job.phase === "running" ? "Scanning" : "Scan"}

@@ -38,20 +38,20 @@ export function LandingHero() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[70%_center]"
+          className="object-cover object-center lg:object-[70%_center]"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-void via-void/80 to-void/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-void via-void/90 to-void/40 lg:via-void/80 lg:to-void/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/50" />
         <motion.div
           className="absolute inset-0 bg-void"
           style={reduce ? undefined : { opacity: veil }}
         />
       </motion.div>
 
-      <div className="relative z-10 flex min-h-[100dvh] w-full items-center justify-start px-5 pb-16 pt-24 sm:px-8">
+      <div className="relative z-10 flex min-h-[100dvh] w-full items-center justify-start px-4 pb-20 pt-[calc(5.5rem+env(safe-area-inset-top))] sm:px-8 sm:pb-16 sm:pt-24">
         <div className="w-full max-w-xl text-left">
           <motion.h1
-            className="text-5xl font-semibold tracking-tighter text-ink sm:text-6xl lg:text-7xl xl:text-8xl"
+            className="max-w-[11ch] text-[2.15rem] font-semibold leading-[1.08] tracking-tight text-ink sm:max-w-none sm:text-6xl sm:leading-none sm:tracking-tighter lg:text-7xl xl:text-8xl"
             initial={reduce ? false : { opacity: 0, y: 22, filter: "blur(12px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ ...iosSpring, delay: 0.08 }}
@@ -59,7 +59,7 @@ export function LandingHero() {
             Scan a token. Trust the chain.
           </motion.h1>
           <motion.p
-            className="mt-4 max-w-[36ch] text-base leading-7 text-ink-muted"
+            className="mt-4 max-w-[34ch] text-[15px] leading-6 text-ink-muted sm:text-base sm:leading-7"
             initial={reduce ? false : { opacity: 0, y: 18, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ ...iosSpring, delay: 0.2 }}
@@ -68,7 +68,7 @@ export function LandingHero() {
             RiskRegistry.
           </motion.p>
           <motion.div
-            className="mt-7 flex flex-wrap items-center gap-3"
+            className="mt-7 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center"
             initial={reduce ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...iosSpring, delay: 0.28 }}
@@ -79,7 +79,7 @@ export function LandingHero() {
             >
               <Link
                 href="/scan"
-                className="inline-flex min-h-12 items-center gap-2 rounded-md bg-accent px-5 text-sm font-medium text-on-accent hover:bg-accent-hot"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-accent px-5 text-sm font-medium text-on-accent hover:bg-accent-hot sm:w-auto"
               >
                 Open the scanner
                 <ArrowRight className="size-4" weight="bold" />
@@ -91,7 +91,7 @@ export function LandingHero() {
             >
               <Link
                 href={SAMPLE_REPORT}
-                className="inline-flex min-h-12 items-center rounded-md bg-void/35 px-4 text-sm text-ink ring-1 ring-line backdrop-blur-md hover:bg-void/55"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-void/35 px-4 text-sm text-ink ring-1 ring-line backdrop-blur-md hover:bg-void/55 sm:w-auto"
               >
                 Read a report
               </Link>

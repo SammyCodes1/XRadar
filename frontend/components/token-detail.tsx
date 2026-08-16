@@ -150,7 +150,7 @@ export function TokenDetail({
                 </p>
               ) : null}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <div
                 className="flex rounded-md bg-inset p-0.5 ring-1 ring-line"
                 role="group"
@@ -183,7 +183,7 @@ export function TokenDetail({
                 type="button"
                 disabled={job.phase === "running"}
                 onClick={onRescan}
-                className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-on-accent transition-transform hover:bg-accent-hot active:scale-[0.98] disabled:opacity-60"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-on-accent transition-transform hover:bg-accent-hot active:scale-[0.98] disabled:opacity-60 sm:min-h-0 sm:flex-none"
               >
                 <ArrowsClockwise
                   className={`size-4 ${job.phase === "running" ? "animate-spin" : ""}`}

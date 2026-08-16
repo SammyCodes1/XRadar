@@ -100,18 +100,19 @@ export function SiteHeader() {
   const onScanner = pathname === "/scan" || pathname.startsWith("/token/");
 
   return (
-    <header className="sticky top-0 z-20 border-b border-line/80 bg-void/72 backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-line/80 bg-void/72 pt-[env(safe-area-inset-top)] backdrop-blur-md">
       <div className="page-col">
-        <div className="flex h-16 items-center justify-between gap-3 sm:hidden">
+        <div className="flex h-14 items-center justify-between gap-2 sm:hidden">
           <Brand onScanner={onScanner} />
-          <div className="flex items-center gap-2">
-            <NetworkBadge network={network} />
+          <div className="flex shrink-0 items-center gap-1.5">
             <NetworkSwitch network={network} setNetwork={setNetwork} />
             <ThemeToggle />
           </div>
         </div>
-        <div className="flex justify-end pb-3 sm:hidden">
-          <WalletConnect />
+        <div className="flex justify-stretch pb-3 sm:hidden">
+          <div className="w-full">
+            <WalletConnect />
+          </div>
         </div>
 
         <div className="hidden h-16 items-center justify-between gap-4 sm:flex">

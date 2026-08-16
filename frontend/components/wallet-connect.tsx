@@ -42,7 +42,7 @@ export function WalletConnect() {
 
   if (isConnected && address) {
     return (
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
         <span className="font-mono text-xs text-ink-muted sm:text-sm">
           {shortenAddress(address)}
         </span>
@@ -60,7 +60,7 @@ export function WalletConnect() {
             type="button"
             disabled={isSwitching}
             onClick={() => switchChain({ chainId: dashChainId })}
-            className="inline-flex h-8 items-center rounded-md bg-accent px-2.5 text-xs font-medium text-on-accent transition-transform hover:bg-accent-hot active:scale-[0.98] disabled:opacity-50"
+            className="inline-flex min-h-11 items-center rounded-md bg-accent px-2.5 text-xs font-medium text-on-accent transition-transform hover:bg-accent-hot active:scale-[0.98] disabled:opacity-50 sm:min-h-8"
           >
             Switch
           </button>
@@ -68,7 +68,7 @@ export function WalletConnect() {
         <button
           type="button"
           onClick={() => disconnect()}
-          className="inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-xs text-ink-muted ring-1 ring-line transition-colors hover:bg-raised hover:text-ink"
+          className="inline-flex min-h-11 items-center gap-1 rounded-md px-2.5 text-xs text-ink-muted ring-1 ring-line transition-colors hover:bg-raised hover:text-ink sm:min-h-8"
         >
           <SignOut className="size-3.5" weight="regular" />
           Disconnect
@@ -80,23 +80,23 @@ export function WalletConnect() {
   const connecting = isPending || status === "connecting";
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="flex items-center justify-end gap-2">
+    <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:justify-end">
         <button
           type="button"
           disabled={!metamask || connecting}
           onClick={() => metamask && connect({ connector: metamask })}
-          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-accent px-2.5 text-xs font-medium text-on-accent transition-transform hover:bg-accent-hot active:scale-[0.98] disabled:opacity-50 sm:px-3"
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md bg-accent px-2.5 text-xs font-medium text-on-accent transition-transform hover:bg-accent-hot active:scale-[0.98] disabled:opacity-50 sm:min-h-8 sm:px-3"
         >
           <Wallet className="size-3.5" weight="bold" />
-          <span className="sm:hidden">{connecting ? "..." : "MM"}</span>
+          <span className="sm:hidden">{connecting ? "..." : "MetaMask"}</span>
           <span className="hidden sm:inline">{connecting ? "Connecting" : "MetaMask"}</span>
         </button>
         <button
           type="button"
           disabled={!okx || connecting}
           onClick={() => okx && connect({ connector: okx })}
-          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-ink ring-1 ring-line transition-colors hover:bg-raised active:scale-[0.98] disabled:opacity-50 sm:px-3"
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-ink ring-1 ring-line transition-colors hover:bg-raised active:scale-[0.98] disabled:opacity-50 sm:min-h-8 sm:px-3"
         >
           {connecting ? "Connecting" : (
             <>

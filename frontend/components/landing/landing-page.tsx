@@ -13,10 +13,10 @@ export function LandingPage() {
       <main>
         <LandingHero />
 
-        <section id="method" className="py-20 sm:py-24">
+        <section id="method" className="py-14 sm:py-24">
           <div className="page-col">
             <Reveal className="max-w-xl text-left">
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="text-[1.75rem] font-semibold tracking-tight sm:text-4xl">
                 Three moves. One on-chain number.
               </h2>
               <p className="mt-3 max-w-[52ch] text-sm leading-7 text-ink-muted">
@@ -30,7 +30,7 @@ export function LandingPage() {
               <div className="relative z-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-8">
               <Reveal className="lg:col-span-7 lg:row-span-2" delay={0.04}>
                 <article className="relative overflow-hidden rounded-lg bg-panel ring-1 ring-line">
-                  <div className="relative aspect-[16/10] min-h-[18rem] lg:aspect-auto lg:h-full lg:min-h-[34rem]">
+                  <div className="relative aspect-[4/3] min-h-[14rem] sm:aspect-[16/10] sm:min-h-[18rem] lg:aspect-auto lg:h-full lg:min-h-[34rem]">
                     <Image
                       src="/landing/console.jpg"
                       alt="Worn metal scanner panel with a glowing orange LED cross"
@@ -82,7 +82,7 @@ export function LandingPage() {
         </section>
 
         <section id="registry" className="border-t border-line bg-inset/60">
-          <div className="page-col grid items-center gap-10 py-20 sm:py-24 lg:grid-cols-2">
+          <div className="page-col grid items-center gap-8 py-14 sm:gap-10 sm:py-24 lg:grid-cols-2">
             <Reveal>
               <div className="relative aspect-[3/2] overflow-hidden rounded-lg ring-1 ring-line">
                 <Image
@@ -95,7 +95,7 @@ export function LandingPage() {
               </div>
             </Reveal>
             <Reveal delay={0.08}>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="text-[1.75rem] font-semibold tracking-tight sm:text-4xl">
                 Anyone can read the same number.
               </h2>
               <p className="mt-4 max-w-[48ch] text-sm leading-7 text-ink-muted">
@@ -114,14 +114,14 @@ export function LandingPage() {
         </section>
 
         <section className="border-t border-line">
-          <div className="page-col grid items-center gap-10 py-20 sm:py-24 lg:grid-cols-2">
+          <div className="page-col grid items-center gap-8 py-14 sm:gap-10 sm:py-24 lg:grid-cols-2">
             <Reveal className="text-left">
-              <h2 className="max-w-[12ch] text-3xl font-semibold tracking-tight sm:text-5xl">
+              <h2 className="max-w-[12ch] text-[1.75rem] font-semibold tracking-tight sm:text-5xl">
                 Run the next address.
               </h2>
               <Link
                 href="/scan"
-                className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-md bg-accent px-5 text-sm font-medium text-on-accent hover:bg-accent-hot"
+                className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-accent px-5 text-sm font-medium text-on-accent hover:bg-accent-hot sm:mt-8 sm:w-auto"
               >
                 Open the scanner
                 <ArrowRight className="size-4" weight="bold" />
