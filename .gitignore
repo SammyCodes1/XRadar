@@ -39,3 +39,5 @@ npm-debug.log*
 # Coverage / misc
 coverage/
 .vercel
+.env*
+!.env.example
