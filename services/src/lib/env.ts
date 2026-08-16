@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
 function applyEnvFile(filePath: string): void {
   if (!existsSync(filePath)) return;
@@ -24,24 +23,22 @@ function applyEnvFile(filePath: string): void {
   }
 }
 
-const cwd = process.cwd();
-const here = fileURLToPath(new URL(".", import.meta.url));
-
-const envFiles = [
-  resolve(here, "../../../contracts/.env"),
-  resolve(here, "../../../.env"),
-  resolve(here, "../../.env"),
-  resolve(cwd, "../contracts/.env"),
-  resolve(cwd, "../.env"),
-  resolve(cwd, "../../contracts/.env"),
-  resolve(cwd, "../../.env"),
-  resolve(cwd, ".env"),
-  resolve(cwd, ".env.local"),
-];
-
-for (const file of envFiles) {
-  applyEnvFile(file);
+function loadLocalEnvFiles(): void {
+  if (process.env.VERCEL) return;
+  const cwd = process.cwd();
+  const files = [
+    resolve(cwd, "../contracts/.env"),
+    resolve(cwd, "../.env"),
+    resolve(cwd, "../../contracts/.env"),
+    resolve(cwd, "../../.env"),
+    resolve(cwd, "contracts/.env"),
+    resolve(cwd, ".env"),
+    resolve(cwd, ".env.local"),
+  ];
+  for (const file of files) applyEnvFile(file);
 }
+
+loadLocalEnvFiles();
 
 export const env = {
   get port() {
