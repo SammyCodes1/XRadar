@@ -1,4 +1,8 @@
+"use client";
+
 import { arrangeScanSummary } from "../lib/scan-summary";
+import { CopyableText } from "./copyable-text";
+import { CopyAddress } from "./copy-address";
 
 type FlagLike = {
   triggered?: boolean;
@@ -27,14 +31,18 @@ export function ScanSummary({
           {facts.map((fact) => (
             <div key={fact.label}>
               <dt className="text-[11px] text-ink-muted">{fact.label}</dt>
-              <dd className="mt-1 text-sm leading-6 text-ink">{fact.value}</dd>
+              <dd className="mt-1 text-sm leading-6 text-ink">
+                {fact.address ? (
+                  <CopyAddress address={fact.address} />
+                ) : (
+                  <CopyableText text={fact.value} />
+                )}
+              </dd>
             </div>
           ))}
         </dl>
       ) : null}
-      {prose ? (
-        <p className="max-w-[65ch] text-sm leading-6 text-ink">{prose}</p>
-      ) : null}
+      {prose ? <CopyableText text={prose} /> : null}
     </div>
   );
 }

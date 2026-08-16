@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CheckCircle,
   MinusCircle,
@@ -5,6 +7,7 @@ import {
   XCircle,
 } from "@phosphor-icons/react";
 import type { FindingOutcome, ReportCheck } from "@xradar/shared";
+import { CopyableText } from "./copyable-text";
 
 const OUTCOME_STYLE: Record<
   FindingOutcome,
@@ -56,7 +59,12 @@ export function FindingList({ checks }: { checks: ReportCheck[] }) {
                 <p className="text-sm font-medium text-ink">{check.label}</p>
                 <span className={`text-[11px] ${style.wrap}`}>{style.label}</span>
               </div>
-              <p className="mt-1 text-sm leading-6 text-ink-muted">{check.value}</p>
+              <div className="mt-1">
+                <CopyableText
+                  text={check.value}
+                  className="text-sm leading-6 text-ink-muted"
+                />
+              </div>
             </div>
           </li>
         );

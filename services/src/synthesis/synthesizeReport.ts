@@ -56,6 +56,9 @@ function flagsFromFindings(findings: RiskFindings): RiskFlags {
     label: "Ownership renounced",
     severity: "info",
     triggered: findings.ownershipStatus.renounced === true,
+    detail: findings.ownershipStatus.owner
+      ? `owner=${findings.ownershipStatus.owner}`
+      : findings.ownershipStatus.error,
   };
   flags.unverifiedSource = {
     key: "unverifiedSource",
@@ -205,7 +208,7 @@ export function checksFromFindings(findings: RiskFindings): ReportCheck[] {
     ownership.renounced
       ? "Ownership renounced"
       : ownership.owner
-        ? `Owner ${shortAddr(ownership.owner)}`
+        ? `Owner ${ownership.owner}`
         : "No owner() found",
     ownership.hasMint ? "mint present" : null,
     ownership.hasBlacklist ? "blacklist present" : null,
@@ -380,9 +383,9 @@ export function checksFromFindings(findings: RiskFindings): ReportCheck[] {
               : "warning",
       value:
         owners.sameWallet
-          ? `Owner matches deployer ${shortAddr(owners.owner)}`
+          ? `Owner matches deployer ${owners.owner}`
           : owners.sameWallet === false
-            ? `Owner ${shortAddr(owners.owner)} differs from deployer ${shortAddr(owners.deployer)}${owners.ownerIsContract ? " (owner is a contract)" : ""}`
+            ? `Owner ${owners.owner} differs from deployer ${owners.deployer}${owners.ownerIsContract ? " (owner is a contract)" : ""}`
             : (owners.error ?? "Could not compare owner and deployer"),
     },
     {

@@ -1,7 +1,16 @@
 export type SummaryFact = {
   label: string;
   value: string;
+  address?: string;
 };
+
+const ADDRESS_RE = /0x[a-fA-F0-9]{40}/;
+
+export function extractAddress(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const match = raw.match(ADDRESS_RE);
+  return match?.[0];
+}
 
 type FlagLike = {
   triggered?: boolean;
@@ -57,8 +66,13 @@ function factsFromFlags(
   }
 
   const renounced = flags.renouncedOwnership;
+  const ownerAddress =
+    extractAddress(renounced?.detail) ??
+    extractAddress(flags.ownerNotDeployer?.detail);
   if (renounced?.triggered) {
     setFact(map, "Ownership", "Renounced");
+  } else if (ownerAddress) {
+    setFact(map, "Ownership", ownerAddress);
   }
 
   const liquidity = flags.liquidityUnlocked;
@@ -89,6 +103,10 @@ export function arrangeScanSummary(
 ): { facts: SummaryFact[]; prose?: string } {
   const map = factsFromFlags(flags);
   if (summary) {
+    const ownerInProse = summary.match(/Owner is (0x[a-fA-F0-9]{40})/i);
+    if (ownerInProse?.[1]) {
+      setFact(map, "Ownership", ownerInProse[1]);
+    }
     for (const [label, value] of parseDumpBits(summary)) {
       setFact(map, label as (typeof FACT_ORDER)[number], value);
     }
@@ -96,7 +114,9 @@ export function arrangeScanSummary(
 
   const facts = FACT_ORDER.flatMap((label) => {
     const value = map.get(label);
-    return value ? [{ label, value }] : [];
+    if (!value) return [];
+    const address = label === "Ownership" ? extractAddress(value) : undefined;
+    return [{ label, value, address }];
   });
 
   const isDump =
