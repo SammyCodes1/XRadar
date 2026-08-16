@@ -1,4 +1,4 @@
-import { runRiskChecks } from "./runRiskChecks.js";
+import { runRiskChecks } from "./runRiskChecks";
 import type { XLayerNetwork } from "@xradar/shared";
 
 const jobs: { token: string; chain: XLayerNetwork; label: string }[] = [

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { scanAndPublish } from "../../src/orchestrator/scanAndPublish.js";
+import { scanAndPublish } from "../../src/orchestrator/scanAndPublish";
 
 /**
  * Vercel Cron: every 2 minutes (see vercel.json).

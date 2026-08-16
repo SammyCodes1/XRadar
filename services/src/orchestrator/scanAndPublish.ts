@@ -1,12 +1,12 @@
 import type { Address, Hex } from "viem";
 import type { DiscoveredToken, RiskReport, XLayerNetwork } from "@xradar/shared";
 import { getNetwork, requireNetwork } from "@xradar/shared";
-import { scanNewTokens } from "../detection/scan.js";
-import { publishToRegistry } from "../publish/publishToRegistry.js";
-import { runRiskChecks } from "../risk/runRiskChecks.js";
-import { announcePublishedToken } from "../social/announce.js";
-import type { AnnounceResult } from "../social/announce.js";
-import { synthesizeReport } from "../synthesis/synthesizeReport.js";
+import { scanNewTokens } from "../detection/scan";
+import { publishToRegistry } from "../publish/publishToRegistry";
+import { runRiskChecks } from "../risk/runRiskChecks";
+import { announcePublishedToken } from "../social/announce";
+import type { AnnounceResult } from "../social/announce";
+import { synthesizeReport } from "../synthesis/synthesizeReport";
 
 export type PipelineItem = {
   token: Address;

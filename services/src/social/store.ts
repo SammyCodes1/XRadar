@@ -64,5 +64,6 @@ export function alreadyPosted(posts: PostedAlert[], token: string): boolean {
 }
 
 export function defaultAlertStorePath(network: string): string {
-  return resolve(process.cwd(), ".data", `x-alerts-${network}.json`);
+  const base = process.env.VERCEL ? "/tmp" : process.cwd();
+  return resolve(base, ".data", `x-alerts-${network}.json`);
 }

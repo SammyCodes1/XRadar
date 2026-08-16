@@ -1,6 +1,6 @@
 import type { Address } from "viem";
 import { getRegistryAddress } from "@xradar/shared";
-import { env } from "../lib/env.js";
+import { env } from "../lib/env";
 
 export const RISK_REGISTRY_ABI = [
   {

@@ -4,9 +4,9 @@ import {
   type PublicClient,
   parseAbiItem,
 } from "viem";
-import { erc20Abi } from "./constants.js";
-import { fetchTokenHolders, type ExplorerNetwork } from "./explorer.js";
-import { getLogsChunked } from "./logRange.js";
+import { erc20Abi } from "./constants";
+import { fetchTokenHolders, type ExplorerNetwork } from "./explorer";
+import { getLogsChunked } from "./logRange";
 
 const transferEvent = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)",

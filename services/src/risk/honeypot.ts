@@ -11,13 +11,13 @@ import {
   OKX_NATIVE_TOKEN,
   WOKB,
   honeypotProbeAbi,
-} from "./constants.js";
+} from "./constants";
 import {
   getOkxSwapTx,
   quoteOkxSwap,
-} from "./okxDex.js";
-import { findPrimaryWokbPair, getAmountsOut } from "./pairs.js";
-import { HONEYPOT_PROBE_BYTECODE } from "./probeBytecode.js";
+} from "./okxDex";
+import { findPrimaryWokbPair, getAmountsOut } from "./pairs";
+import { HONEYPOT_PROBE_BYTECODE } from "./probeBytecode";
 
 const PROBE: Address = "0x1000000000000000000000000000000000000001";
 

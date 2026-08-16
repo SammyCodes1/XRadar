@@ -1,23 +1,23 @@
 import type { DiscoveredToken } from "@xradar/shared";
 import type { Address, Hex, PublicClient } from "viem";
-import { isErc20Bytecode } from "./erc20.js";
+import { isErc20Bytecode } from "./erc20";
 import {
   decodePairArgs,
   eventForKind,
   factoriesForScan,
   isIgnoredBaseToken,
   type DexFactory,
-} from "./factories.js";
+} from "./factories";
 import {
   FileDetectionStore,
   defaultStorePath,
   type DetectionStore,
-} from "./store.js";
+} from "./store";
 import {
   chainFor,
   createXLayerPublicClient,
   type DetectionNetwork,
-} from "./client.js";
+} from "./client";
 
 export type ScanOptions = {
   network?: DetectionNetwork;

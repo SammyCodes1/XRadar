@@ -6,10 +6,10 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { RiskReport, XLayerNetwork } from "@xradar/shared";
-import { chainFor, rpcFor } from "../detection/client.js";
-import { env } from "../lib/env.js";
-import { enqueuePublish } from "./nonceQueue.js";
-import { RISK_REGISTRY_ABI, registryAddress } from "./registry.js";
+import { chainFor, rpcFor } from "../detection/client";
+import { env } from "../lib/env";
+import { enqueuePublish } from "./nonceQueue";
+import { RISK_REGISTRY_ABI, registryAddress } from "./registry";
 
 export type PublishResult = {
   token: Address;

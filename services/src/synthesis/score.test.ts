@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { RiskFindings } from "@xradar/shared";
-import { scoreFromFindings } from "./synthesizeReport.js";
+import { scoreFromFindings } from "./synthesizeReport";
 
 function base(over: Partial<RiskFindings> = {}): RiskFindings {
   return {

@@ -5,15 +5,15 @@ import { join } from "node:path";
 import { describe, it } from "node:test";
 import type { Address } from "viem";
 import type { RiskReport } from "@xradar/shared";
-import { announcePublishedToken } from "./announce.js";
+import { announcePublishedToken } from "./announce";
 import {
   composeAlertTweet,
   shouldAnnounceAlert,
   topRiskFlags,
   truncateAddress,
-} from "./composeAlert.js";
-import { percentEncode } from "./oauth1.js";
-import { FileAlertStore, alreadyPosted } from "./store.js";
+} from "./composeAlert";
+import { percentEncode } from "./oauth1";
+import { FileAlertStore, alreadyPosted } from "./store";
 
 const token = "0xD44Dec3B0617Fb707D4101814a51a6741469cebe" as Address;
 

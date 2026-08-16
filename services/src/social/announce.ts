@@ -1,17 +1,17 @@
 import type { Address } from "viem";
 import type { RiskReport, XLayerNetwork } from "@xradar/shared";
-import { env } from "../lib/env.js";
+import { env } from "../lib/env";
 import {
   composeAlertTweet,
   shouldAnnounceAlert,
-} from "./composeAlert.js";
+} from "./composeAlert";
 import {
   FileAlertStore,
   alreadyPosted,
   defaultAlertStorePath,
   type PostedAlert,
-} from "./store.js";
-import { postTweet, readXCredentials } from "./xClient.js";
+} from "./store";
+import { postTweet, readXCredentials } from "./xClient";
 
 export type AnnounceResult = {
   status: "posted" | "skipped" | "failed";

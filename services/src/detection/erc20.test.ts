@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { isErc20Bytecode } from "./erc20.js";
+import { isErc20Bytecode } from "./erc20";
 
 describe("isErc20Bytecode", () => {
   it("accepts bytecode that contains all three selectors", () => {

@@ -10,7 +10,7 @@ import {
   uniswapV2FactoryAbi,
   uniswapV2PairAbi,
   uniswapV2RouterAbi,
-} from "./constants.js";
+} from "./constants";
 
 export type PrimaryPair = {
   pair: Address;

@@ -4,8 +4,8 @@ import {
   BURN_ADDRESSES,
   KNOWN_LOCKERS,
   uniswapV2PairAbi,
-} from "./constants.js";
-import { findPrimaryWokbPair } from "./pairs.js";
+} from "./constants";
+import { findPrimaryWokbPair } from "./pairs";
 
 function pct(part: bigint, whole: bigint): number {
   if (whole === 0n) return 0;

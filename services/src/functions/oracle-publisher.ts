@@ -1,6 +1,6 @@
 import type { HealthResponse, OraclePublication } from "@xradar/shared";
-import type { FunctionHandler } from "../lib/http.js";
-import { readJsonBody, sendError, sendJson } from "../lib/http.js";
+import type { FunctionHandler } from "../lib/http";
+import { readJsonBody, sendError, sendJson } from "../lib/http";
 
 export const oraclePublisherHandler: FunctionHandler = async (req, res) => {
   if (req.method === "GET") {

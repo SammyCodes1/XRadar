@@ -1,7 +1,7 @@
 /**
  *   npm run risk:check -- --token 0x... --chain mainnet
  */
-import { runRiskChecks } from "./runRiskChecks.js";
+import { runRiskChecks } from "./runRiskChecks";
 import type { XLayerNetwork } from "@xradar/shared";
 
 function arg(name: string): string | undefined {

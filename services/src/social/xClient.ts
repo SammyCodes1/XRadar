@@ -1,5 +1,5 @@
-import { env } from "../lib/env.js";
-import { oauth1Header } from "./oauth1.js";
+import { env } from "../lib/env";
+import { oauth1Header } from "./oauth1";
 
 export type XCredentials = {
   apiKey: string;

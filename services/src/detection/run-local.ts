@@ -6,9 +6,9 @@
  *   npm run scan:testnet -- --reset --lookback 50
  */
 import { resolve } from "node:path";
-import { FileDetectionStore } from "./store.js";
-import { scanNewTokens, type ScanOptions } from "./scan.js";
-import type { DetectionNetwork } from "./client.js";
+import { FileDetectionStore } from "./store";
+import { scanNewTokens, type ScanOptions } from "./scan";
+import type { DetectionNetwork } from "./client";
 
 function flag(name: string): boolean {
   return process.argv.includes(`--${name}`);

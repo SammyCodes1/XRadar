@@ -1,4 +1,4 @@
-import { env } from "../lib/env.js";
+import { env } from "../lib/env";
 
 export type ExplorerNetwork = "mainnet" | "testnet";
 

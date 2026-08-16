@@ -4,14 +4,14 @@ import {
   type PublicClient,
   parseAbiItem,
 } from "viem";
-import { ABANDONED_TRANSFER_WINDOW_SEC } from "./constants.js";
+import { ABANDONED_TRANSFER_WINDOW_SEC } from "./constants";
 import {
   fetchContractCreator,
   fetchCreatedContracts,
   type ExplorerNetwork,
-} from "./explorer.js";
-import { getLogsChunked } from "./logRange.js";
-import { findPrimaryWokbPair } from "./pairs.js";
+} from "./explorer";
+import { getLogsChunked } from "./logRange";
+import { findPrimaryWokbPair } from "./pairs";
 
 const transferEvent = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)",

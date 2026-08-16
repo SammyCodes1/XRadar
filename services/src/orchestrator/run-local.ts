@@ -3,7 +3,7 @@
  *   npm run pipeline:testnet -- --force 0x...
  */
 import type { Address } from "viem";
-import { scanAndPublish } from "./scanAndPublish.js";
+import { scanAndPublish } from "./scanAndPublish";
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);

@@ -1,7 +1,7 @@
 import type { OwnershipStatusFinding } from "@xradar/shared";
 import type { Address, Hex, PublicClient } from "viem";
-import { SELECTORS, ZERO_ADDRESS, ownableAbi } from "./constants.js";
-import { fetchVerifiedSource, type ExplorerNetwork } from "./explorer.js";
+import { SELECTORS, ZERO_ADDRESS, ownableAbi } from "./constants";
+import { fetchVerifiedSource, type ExplorerNetwork } from "./explorer";
 
 function bytecodeHasSelector(code: Hex | undefined, selector: string): boolean {
   if (!code || code === "0x") return false;

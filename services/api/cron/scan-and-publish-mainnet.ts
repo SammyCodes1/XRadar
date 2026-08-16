@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import handler from "./scan-and-publish.js";
+import handler from "./scan-and-publish";
 
 export default async function mainnetCron(
   req: VercelRequest,

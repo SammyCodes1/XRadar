@@ -1,8 +1,8 @@
 import { createHmac } from "node:crypto";
 import { request as httpsRequest } from "node:https";
 import type { Address } from "viem";
-import { env } from "../lib/env.js";
-import { OKX_DEX_ROUTER_XLAYER, OKX_NATIVE_TOKEN } from "./constants.js";
+import { env } from "../lib/env";
+import { OKX_DEX_ROUTER_XLAYER, OKX_NATIVE_TOKEN } from "./constants";
 
 const BASES = [
   "https://web3.okx.com",

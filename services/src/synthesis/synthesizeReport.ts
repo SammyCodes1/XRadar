@@ -5,7 +5,7 @@ import type {
   RiskReport,
   RiskScore,
 } from "@xradar/shared";
-import { env } from "../lib/env.js";
+import { env } from "../lib/env";
 
 function clamp(n: number): number {
   return Math.max(0, Math.min(100, Math.round(n)));

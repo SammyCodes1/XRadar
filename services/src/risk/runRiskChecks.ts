@@ -1,12 +1,12 @@
 import type { Address } from "viem";
 import { getNetwork, type RiskFindings, type XLayerNetwork } from "@xradar/shared";
-import { createXLayerPublicClient } from "../detection/client.js";
-import { checkDeployerHistory } from "./deployer.js";
-import { checkHolderConcentration } from "./holders.js";
-import { checkHoneypot } from "./honeypot.js";
-import { checkLpLockStatus } from "./lpLock.js";
-import { checkOwnershipStatus } from "./ownership.js";
-import { checkVerifiedContract } from "./verified.js";
+import { createXLayerPublicClient } from "../detection/client";
+import { checkDeployerHistory } from "./deployer";
+import { checkHolderConcentration } from "./holders";
+import { checkHoneypot } from "./honeypot";
+import { checkLpLockStatus } from "./lpLock";
+import { checkOwnershipStatus } from "./ownership";
+import { checkVerifiedContract } from "./verified";
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 

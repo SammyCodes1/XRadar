@@ -5,7 +5,7 @@
 import type { Address } from "viem";
 import type { RiskFlag, RiskFlagKey, RiskReport } from "@xradar/shared";
 import { getNetwork } from "@xradar/shared";
-import { announcePublishedToken } from "./announce.js";
+import { announcePublishedToken } from "./announce";
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);

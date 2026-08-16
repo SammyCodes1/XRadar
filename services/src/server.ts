@@ -1,15 +1,15 @@
 import { createServer } from "node:http";
-import { env } from "./lib/env.js";
+import { env } from "./lib/env";
 import {
   type FunctionHandler,
   setCors,
   sendError,
   sendJson,
-} from "./lib/http.js";
-import { detectionHandler } from "./functions/detection.js";
-import { riskChecksHandler } from "./functions/risk-checks.js";
-import { aiSynthesisHandler } from "./functions/ai-synthesis.js";
-import { oraclePublisherHandler } from "./functions/oracle-publisher.js";
+} from "./lib/http";
+import { detectionHandler } from "./functions/detection";
+import { riskChecksHandler } from "./functions/risk-checks";
+import { aiSynthesisHandler } from "./functions/ai-synthesis";
+import { oraclePublisherHandler } from "./functions/oracle-publisher";
 
 const healthHandler: FunctionHandler = (_req, res) => {
   sendJson(res, 200, {

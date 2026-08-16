@@ -1,5 +1,5 @@
 import type { VerifiedContractFinding } from "@xradar/shared";
-import { fetchVerifiedSource, type ExplorerNetwork } from "./explorer.js";
+import { fetchVerifiedSource, type ExplorerNetwork } from "./explorer";
 
 export async function checkVerifiedContract(
   token: string,

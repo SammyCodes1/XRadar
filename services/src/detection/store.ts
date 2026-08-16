@@ -73,5 +73,6 @@ export class FileDetectionStore implements DetectionStore {
 }
 
 export function defaultStorePath(network: string): string {
-  return resolve(process.cwd(), ".data", `detection-${network}.json`);
+  const base = process.env.VERCEL ? "/tmp" : process.cwd();
+  return resolve(base, ".data", `detection-${network}.json`);
 }
