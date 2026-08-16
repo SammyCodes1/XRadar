@@ -1,6 +1,6 @@
 "use client";
 
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
@@ -164,20 +164,30 @@ export function TokenSearch() {
               className="scan-bezel mt-6"
             >
               <div className="scan-well p-5 sm:p-6">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                  {typeof score === "number" ? (
-                    <ScanScore score={score} size="lg" />
-                  ) : (
-                    <p className="text-sm text-ink-muted">No score returned</p>
-                  )}
-                  <div className="min-w-0 flex-1 sm:text-right">
-                    <p className="text-[11px] text-ink-muted">
-                      {job.result?.stage === "published" ? "Published on-chain" : job.result?.stage}
-                    </p>
-                    <p className="mt-1 truncate font-mono text-sm text-ink">
-                      {job.result?.token}
-                    </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                    {typeof score === "number" ? (
+                      <ScanScore score={score} size="lg" />
+                    ) : (
+                      <p className="text-sm text-ink-muted">No score returned</p>
+                    )}
+                    <div className="min-w-0 flex-1 sm:text-right">
+                      <p className="text-[11px] text-ink-muted">
+                        {job.result?.stage === "published" ? "Published on-chain" : job.result?.stage}
+                      </p>
+                      <p className="mt-1 truncate font-mono text-sm text-ink">
+                        {job.result?.token}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => job.reset()}
+                    className="rounded-md p-1.5 text-ink-muted transition-colors hover:bg-raised hover:text-ink"
+                    aria-label="Dismiss scan result"
+                  >
+                    <X className="size-4" weight="bold" />
+                  </button>
                 </div>
                 <div className="mt-5">
                   <ScanSummary
