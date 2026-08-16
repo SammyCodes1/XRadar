@@ -1,12 +1,12 @@
 {
   "services": {
-    "web": {
-      "root": "frontend/",
+    "frontend": {
+      "root": "frontend",
       "framework": "nextjs",
       "installCommand": "npm install --prefix .."
     },
     "jobs": {
-      "root": "services/",
+      "root": "services",
       "installCommand": "npm install --prefix ..",
       "functions": {
         "api/cron/*.ts": {
@@ -18,11 +18,17 @@
   "rewrites": [
     {
       "source": "/api/cron/(.*)",
-      "destination": { "service": "jobs" }
+      "destination": {
+        "type": "service",
+        "service": "jobs"
+      }
     },
     {
       "source": "/(.*)",
-      "destination": { "service": "web" }
+      "destination": {
+        "type": "service",
+        "service": "frontend"
+      }
     }
   ],
   "crons": [
