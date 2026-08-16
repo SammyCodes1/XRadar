@@ -110,7 +110,7 @@ export function ScanDialog({
   return createPortal(
     <AnimatePresence>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <motion.button
             type="button"
             aria-label={closeable ? "Close scan dialog" : "Scan still running"}
