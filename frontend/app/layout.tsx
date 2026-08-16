@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "XRadar - Token risk on X Layer",
   description:
-    "Scan an X Layer token. Risk scores publish to RiskRegistry so anyone can read them on-chain.",
+    "X Layer token screener. Twelve on-chain checks, auto-discovery for new listings, scores on RiskRegistry.",
 };
 
 export const viewport: Viewport = {

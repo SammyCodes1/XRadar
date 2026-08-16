@@ -64,8 +64,8 @@ export function LandingHero() {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ ...iosSpring, delay: 0.2 }}
           >
-            Paste a contract. XRadar checks it, then writes the score on
-            RiskRegistry.
+            Paste a contract, or let XRadar pick up new DEX listings.
+            Scores write to RiskRegistry.
           </motion.p>
           <motion.div
             className="mt-7 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center"

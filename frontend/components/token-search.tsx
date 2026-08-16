@@ -78,8 +78,9 @@ export function TokenSearch() {
             Screen a token
           </h1>
           <p className="mt-3 max-w-[42ch] text-sm leading-6 text-ink-muted sm:text-[15px] sm:leading-7">
-            Paste an X Layer contract. The scan writes to RiskRegistry, then
-            this page reads the same number back.
+            Paste an X Layer contract, or let auto-discovery pick up new DEX
+            listings. Scores write to RiskRegistry, then this page reads them
+            back.
           </p>
         </motion.div>
 

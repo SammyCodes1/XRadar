@@ -1,8 +1,10 @@
 import type { Address, Hex } from "viem";
 import type { DiscoveredToken, RiskReport, XLayerNetwork } from "@xradar/shared";
 import { getNetwork, requireNetwork } from "@xradar/shared";
+import { MemoryDetectionStore } from "../detection/store";
 import { scanNewTokens } from "../detection/scan";
 import { publishToRegistry } from "../publish/publishToRegistry";
+import { readScannedTokens } from "../publish/registry";
 import { runRiskChecks } from "../risk/runRiskChecks";
 import { announcePublishedToken } from "../social/announce";
 import type { AnnounceResult } from "../social/announce";
@@ -38,6 +40,9 @@ export type ScanAndPublishOptions = {
   forceTokens?: Address[];
   /** Skip the block scanner (on-demand address lookup). */
   skipDetection?: boolean;
+  persist?: boolean;
+  includeCreates?: boolean;
+  skipKnown?: boolean;
 };
 
 function logFlow(message: string): void {
@@ -110,12 +115,31 @@ export async function scanAndPublish(
   let scannedTo: number | undefined;
   const discovered: DiscoveredToken[] = [];
 
+  const persist = options.persist ?? !process.env.VERCEL;
+  const skipKnown = options.skipKnown !== false;
+  let known: Address[] = [];
+  if (skipKnown) {
+    try {
+      known = await readScannedTokens(chain);
+      logFlow(`registry already has ${known.length} token(s) on ${chain}`);
+    } catch (error) {
+      logFlow(
+        `could not read registry tokens: ${
+          error instanceof Error ? error.message : "unknown error"
+        }`,
+      );
+    }
+  }
+
   if (!options.skipDetection) {
     const scan = await scanNewTokens({
       network: chain,
       lookback: options.lookback ?? 80,
       maxBlocks: options.maxBlocks ?? 80,
-      persist: true,
+      persist,
+      includeCreates: options.includeCreates ?? true,
+      skipTokens: known,
+      store: persist ? undefined : new MemoryDetectionStore(),
     });
     scannedFrom = scan.fromBlock;
     scannedTo = scan.toBlock;

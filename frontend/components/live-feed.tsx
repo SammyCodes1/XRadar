@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowSquareOut, CaretRight, WarningCircle } from "@phosphor-icons/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -29,6 +30,7 @@ type FeedFilter = "all" | RiskLevel;
 
 export function LiveFeed() {
   const { chainId, network, registry, lastScanned } = useDashboard();
+  const queryClient = useQueryClient();
   const reduce = useReducedMotion();
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState<FeedFilter>("all");
@@ -37,6 +39,20 @@ export function LiveFeed() {
     const id = window.setInterval(() => setNow(Date.now()), 15_000);
     return () => window.clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!registry) return;
+    void fetch(`/api/discover?chain=${network}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chain: network }),
+      keepalive: true,
+    })
+      .then((response) => {
+        if (response.ok) void queryClient.invalidateQueries();
+      })
+      .catch(() => undefined);
+  }, [network, registry, queryClient]);
 
   const tokensQuery = useReadContract({
     address: registry,
@@ -137,7 +153,7 @@ export function LiveFeed() {
           On-chain registry
         </h2>
         <p className="mt-2 max-w-[52ch] text-sm leading-6 text-ink-muted">
-          Live from RiskRegistry. Refreshes every 30s. No database.
+          Live from RiskRegistry. New DEX listings are picked up automatically.
         </p>
 
         <dl className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-3">

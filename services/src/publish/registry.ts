@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import { getRegistryAddress } from "@xradar/shared";
+import { createXLayerPublicClient } from "../detection/client";
 import { env } from "../lib/env";
 
 export const RISK_REGISTRY_ABI = [
@@ -33,6 +34,18 @@ export const RISK_REGISTRY_ABI = [
     outputs: [{ name: "tokens", type: "address[]" }],
   },
 ] as const;
+
+export async function readScannedTokens(
+  chain: "mainnet" | "testnet",
+): Promise<Address[]> {
+  const client = createXLayerPublicClient(chain);
+  const tokens = await client.readContract({
+    address: registryAddress(chain),
+    abi: RISK_REGISTRY_ABI,
+    functionName: "getAllScannedTokens",
+  });
+  return [...tokens];
+}
 
 export function registryAddress(chain: "mainnet" | "testnet"): Address {
   const fromEnv = env.oracleContractFor(chain);

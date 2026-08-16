@@ -39,9 +39,10 @@ export function LandingPage() {
                       className="object-cover"
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-void via-void/70 to-transparent px-5 pb-5 pt-16 sm:px-6">
-                      <p className="text-xl font-semibold text-ink">Paste</p>
+                      <p className="text-xl font-semibold text-ink">Find</p>
                       <p className="mt-1 max-w-[36ch] text-sm text-ink-muted">
-                        Drop any X Layer token address into the scanner.
+                        Paste any X Layer address. New DEX listings are picked
+                        up automatically.
                       </p>
                     </div>
                   </div>
@@ -52,8 +53,9 @@ export function LandingPage() {
                 <article className="rounded-lg bg-raised p-6 ring-1 ring-line">
                   <p className="text-xl font-semibold text-ink">Check</p>
                   <p className="mt-2 text-sm leading-6 text-ink-muted">
-                    Six deterministic findings: source, owner, honeypot, LP
-                    lock, holders, deployer.
+                    Twelve read-only checks: source, owner, honeypot, LP lock,
+                    pool size, holders, deployer, proxy, trading limits, owner
+                    vs deployer, pair tax, and a buy-then-sell probe.
                   </p>
                 </article>
               </Reveal>
@@ -70,8 +72,8 @@ export function LandingPage() {
                     </div>
                     <div className="mb-4 h-px w-10 bg-ink-inverse/25" />
                     <p className="text-sm leading-6 text-ink-inverse/75">
-                      The score lands on RiskRegistry. Anyone can read it back
-                      with wagmi.
+                      The score lands on RiskRegistry. Anyone can read the same
+                      number back from the contract.
                     </p>
                   </div>
                 </article>
@@ -99,8 +101,9 @@ export function LandingPage() {
                 Anyone can read the same number.
               </h2>
               <p className="mt-4 max-w-[48ch] text-sm leading-7 text-ink-muted">
-                High-risk tokens can raise an alert on X. The feed on the
-                scanner still comes from the contract, not a private table.
+                Auto-discovery writes new listings to the same registry. The
+                scanner feed reads that contract, not a private table. This is
+                a screener, not an audit.
               </p>
               <Link
                 href="/scan"

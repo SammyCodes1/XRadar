@@ -10,6 +10,7 @@ import {
 } from "./factories";
 import {
   FileDetectionStore,
+  MemoryDetectionStore,
   defaultStorePath,
   type DetectionStore,
 } from "./store";
@@ -33,6 +34,8 @@ export type ScanOptions = {
   store?: DetectionStore;
   persist?: boolean;
   skipTokens?: Address[];
+  /** Walk contract-create txs. Off on cron so pair events stay in budget. */
+  includeCreates?: boolean;
 };
 
 export type ScanResult = {
@@ -211,15 +214,20 @@ export async function scanNewTokens(options: ScanOptions = {}): Promise<ScanResu
   const network = options.network ?? "mainnet";
   const chain = chainFor(network);
   const client = options.client ?? createXLayerPublicClient(network);
+  const persist = options.persist ?? !process.env.VERCEL;
   const store =
-    options.store ?? new FileDetectionStore(defaultStorePath(network));
-  const persist = options.persist ?? true;
+    options.store ??
+    (persist
+      ? new FileDetectionStore(defaultStorePath(network))
+      : new MemoryDetectionStore());
   const lookback = options.lookback ?? DEFAULT_LOOKBACK;
   const maxBlocks = options.maxBlocks ?? DEFAULT_MAX_BLOCKS;
   const skip = options.skipTokens ?? [];
+  const includeCreates = options.includeCreates ?? true;
 
   const state = await store.load();
   const seen = new Set(state.seenTokens.map((a) => a.toLowerCase()));
+  for (const address of skip) seen.add(address.toLowerCase());
   const latest = Number(await client.getBlockNumber());
 
   let fromBlock = options.fromBlock;
@@ -266,14 +274,9 @@ export async function scanNewTokens(options: ScanOptions = {}): Promise<ScanResu
   );
 
   const factories = await liveFactories(client, factoriesForScan());
-  const creates = await scanCreates(
-    client,
-    chain.id,
-    fromBlock,
-    toBlock,
-    seen,
-    skip,
-  );
+  const creates = includeCreates
+    ? await scanCreates(client, chain.id, fromBlock, toBlock, seen, skip)
+    : { createTxs: 0, erc20Candidates: 0, tokens: [] };
   const pairs = await scanFactories(
     client,
     chain.id,

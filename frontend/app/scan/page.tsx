@@ -6,7 +6,7 @@ import { TokenSearch } from "../../components/token-search";
 export const metadata: Metadata = {
   title: "Scanner - XRadar",
   description:
-    "Scan an X Layer token. Risk scores publish to RiskRegistry so anyone can read them on-chain.",
+    "Scan an X Layer token or wait for auto-discovery. Scores publish to RiskRegistry.",
 };
 
 export default function ScanPage() {

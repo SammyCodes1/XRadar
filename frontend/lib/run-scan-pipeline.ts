@@ -54,3 +54,38 @@ export async function runScanAndPublish(
     })),
   };
 }
+
+export async function runDiscover(chain: XLayerNetwork): Promise<{
+  chain: XLayerNetwork;
+  scannedFrom?: number;
+  scannedTo?: number;
+  discovered: number;
+  published: number;
+  failed: number;
+  items: PipelineItem[];
+}> {
+  const result = await scanAndPublish({
+    chain,
+    skipDetection: false,
+    persist: !process.env.VERCEL,
+    includeCreates: false,
+    lookback: 200,
+    maxBlocks: 200,
+    maxTokens: 2,
+  });
+  return {
+    chain: result.chain,
+    scannedFrom: result.scannedFrom,
+    scannedTo: result.scannedTo,
+    discovered: result.discovered,
+    published: result.published,
+    failed: result.failed,
+    items: result.items.map((item) => ({
+      token: item.token,
+      stage: item.stage,
+      score: item.score,
+      txHash: item.txHash,
+      error: item.error,
+    })),
+  };
+}

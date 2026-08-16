@@ -72,6 +72,17 @@ export class FileDetectionStore implements DetectionStore {
   }
 }
 
+/** Ephemeral store for serverless. Always starts from the lookback window. */
+export class MemoryDetectionStore implements DetectionStore {
+  async load(): Promise<DetectionState> {
+    return emptyState();
+  }
+
+  async save(_state: DetectionState): Promise<void> {
+    return;
+  }
+}
+
 export function defaultStorePath(network: string): string {
   const base = process.env.VERCEL ? "/tmp" : process.cwd();
   return resolve(base, ".data", `detection-${network}.json`);
