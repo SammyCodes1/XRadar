@@ -18,8 +18,8 @@ const PUBLIC_RPC: Record<XLayerNetwork, string> = {
 };
 
 const PUBLIC_EXPLORER: Record<XLayerNetwork, string> = {
-  testnet: "https://www.okx.com/web3/explorer/xlayer-test",
-  mainnet: "https://www.okx.com/web3/explorer/xlayer",
+  testnet: "https://www.oklink.com/x-layer-testnet",
+  mainnet: "https://www.oklink.com/x-layer",
 };
 
 /** Canonical X Layer networks. Chain IDs verified live via eth_chainId. */

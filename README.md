@@ -16,8 +16,8 @@ XRadar/
 
 | Network | Chain ID | RPC | Native | Explorer |
 | --- | ---: | --- | --- | --- |
-| X Layer Mainnet | `196` (`0xc4`) | `https://rpc.xlayer.tech` | OKB (18) | [okx.com/web3/explorer/xlayer](https://www.okx.com/web3/explorer/xlayer) |
-| X Layer Testnet | `1952` (`0x7a0`) | `https://testrpc.xlayer.tech/terigon` | OKB (18) | [okx.com/web3/explorer/xlayer-test](https://www.okx.com/web3/explorer/xlayer-test) |
+| X Layer Mainnet | `196` (`0xc4`) | `https://rpc.xlayer.tech` | OKB (18) | [oklink.com/x-layer](https://www.oklink.com/x-layer) |
+| X Layer Testnet | `1952` (`0x7a0`) | `https://testrpc.xlayer.tech/terigon` | OKB (18) | [oklink.com/x-layer-testnet](https://www.oklink.com/x-layer-testnet) |
 
 Testnet chain ID was verified live with `eth_chainId` against `https://testrpc.xlayer.tech/terigon` (result `0x7a0` = **1952**). Mainnet `eth_chainId` against `https://rpc.xlayer.tech` is `0xc4` = **196**. Canonical config lives in `shared/src/networks.ts` and `shared/deployedAddresses.json`.
 
