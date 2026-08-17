@@ -4,20 +4,24 @@ import {
   ArrowRight,
   Check,
   Circle,
-  CircleNotch,
   Scan,
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { XLayerNetwork } from "@xradar/shared";
 import { shortenAddress } from "../lib/format";
 import { iosSpring } from "../lib/motion";
 import { explorerTxUrl } from "../lib/registry";
-import { SCAN_STEPS, type ScanMode, type ScanPhase } from "../lib/use-scan-job";
+import {
+  SCAN_STEPS,
+  SCAN_SUBSTEPS,
+  type ScanMode,
+  type ScanPhase,
+} from "../lib/use-scan-job";
 import type { ScanItem } from "../lib/scan-client";
 import { ScanScore } from "./scan-score";
 import { ScanSummary } from "./scan-summary";
@@ -36,6 +40,12 @@ type ScanDialogProps = {
   onClose: () => void;
   onRetry: () => void;
 };
+
+const BLIPS = [
+  { x: 68, y: 28, delay: "0s" },
+  { x: 30, y: 62, delay: "0.35s" },
+  { x: 74, y: 70, delay: "0.7s" },
+] as const;
 
 export function ScanDialog({
   open,
@@ -114,7 +124,7 @@ export function ScanDialog({
           <motion.button
             type="button"
             aria-label={closeable ? "Close scan dialog" : "Scan still running"}
-            className="absolute inset-0 bg-void/72 backdrop-blur-sm"
+            className="absolute inset-0 bg-void/78 backdrop-blur-md"
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={reduce ? undefined : { opacity: 0 }}
@@ -127,16 +137,24 @@ export function ScanDialog({
             aria-labelledby={titleId}
             aria-busy={phase === "running"}
             tabIndex={-1}
-            className="scan-bezel relative w-full max-w-[28rem] outline-none"
-            initial={reduce ? false : { opacity: 0, y: 18, scale: 0.98 }}
+            className={`scan-bezel relative w-full max-w-[32rem] outline-none ${
+              phase === "running" ? "shadow-[0_0_48px_rgba(196,92,38,0.18)]" : ""
+            }`}
+            initial={reduce ? false : { opacity: 0, y: 18, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: 10, scale: 0.98 }}
             transition={iosSpring}
           >
-            <div className="scan-well p-5 sm:p-6">
+            <div className="scan-well overflow-hidden p-5 sm:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
+                  <p className="text-[11px] tracking-[0.18em] text-accent">
+                    XRADAR
+                  </p>
+                  <h2
+                    id={titleId}
+                    className="mt-1 text-lg font-semibold tracking-tight text-ink"
+                  >
                     {title}
                   </h2>
                   <p className="mt-1 font-mono text-xs text-ink-muted">
@@ -156,24 +174,54 @@ export function ScanDialog({
                 ) : null}
               </div>
 
-              {phase === "running" ? (
-                <RunningBody step={step} reduce={Boolean(reduce)} />
-              ) : null}
+              <AnimatePresence mode="wait">
+                {phase === "running" ? (
+                  <motion.div
+                    key="running"
+                    initial={reduce ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduce ? undefined : { opacity: 0, y: -8 }}
+                    transition={{ duration: 0.22 }}
+                  >
+                    <RunningBody
+                      step={step}
+                      reduce={Boolean(reduce)}
+                      address={address}
+                    />
+                  </motion.div>
+                ) : null}
 
-              {phase === "success" ? (
-                <SuccessBody
-                  mode={mode}
-                  network={network}
-                  chainId={chainId}
-                  result={result}
-                  score={score}
-                  onClose={onClose}
-                />
-              ) : null}
+                {phase === "success" ? (
+                  <motion.div
+                    key="success"
+                    initial={reduce ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduce ? undefined : { opacity: 0 }}
+                    transition={iosSpring}
+                  >
+                    <SuccessBody
+                      mode={mode}
+                      network={network}
+                      chainId={chainId}
+                      result={result}
+                      score={score}
+                      onClose={onClose}
+                      reduce={Boolean(reduce)}
+                    />
+                  </motion.div>
+                ) : null}
 
-              {phase === "error" ? (
-                <ErrorBody error={error} onRetry={onRetry} onClose={onClose} />
-              ) : null}
+                {phase === "error" ? (
+                  <motion.div
+                    key="error"
+                    initial={reduce ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduce ? undefined : { opacity: 0 }}
+                  >
+                    <ErrorBody error={error} onRetry={onRetry} onClose={onClose} />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>
@@ -183,45 +231,131 @@ export function ScanDialog({
   );
 }
 
-function RunningBody({ step, reduce }: { step: number; reduce: boolean }) {
+function RadarScope({
+  step,
+  reduce,
+}: {
+  step: number;
+  reduce: boolean;
+}) {
+  const visibleBlips = BLIPS.slice(0, step + 1);
   return (
-    <div className="mt-6">
-      <div className="flex items-center gap-4">
-        <div className="relative size-14 shrink-0">
-          <span className="absolute inset-0 rounded-full border border-line" />
-          <span
-            className={`absolute inset-0 rounded-full border-2 border-transparent border-t-accent ${
-              reduce ? "" : "animate-spin"
-            }`}
+    <div className="relative mx-auto aspect-square w-[11.5rem]">
+      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(196,92,38,0.16),transparent_62%)]" />
+      <div
+        className={`absolute inset-3 rounded-full border border-accent/25 ${
+          reduce ? "" : "radar-breathe"
+        }`}
+      />
+      <div className="absolute inset-7 rounded-full border border-accent/20" />
+      <div className="absolute inset-[4.25rem] rounded-full border border-line" />
+      <span className="absolute inset-x-3 top-1/2 h-px bg-accent/15" />
+      <span className="absolute inset-y-3 left-1/2 w-px bg-accent/15" />
+      {!reduce ? (
+        <div className="radar-sweep pointer-events-none absolute inset-3 rounded-full">
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                "conic-gradient(from 0deg, transparent 0deg, rgba(196,92,38,0.0) 8deg, rgba(196,92,38,0.38) 42deg, transparent 86deg)",
+            }}
           />
-          <Scan className="absolute inset-0 m-auto size-5 text-accent" weight="bold" />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-ink">{SCAN_STEPS[step]}</p>
-          <p className="mt-1 text-xs text-ink-muted">This usually takes under a minute.</p>
-        </div>
+      ) : null}
+      {visibleBlips.map((blip, index) => (
+        <span
+          key={`${blip.x}-${blip.y}`}
+          className={`absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ${
+            reduce ? "" : "radar-blip"
+          }`}
+          style={{
+            left: `${blip.x}%`,
+            top: `${blip.y}%`,
+            animationDelay: reduce ? undefined : blip.delay,
+            opacity: index === step ? 1 : 0.45,
+          }}
+        />
+      ))}
+      <Scan
+        className="absolute inset-0 m-auto size-6 text-accent"
+        weight="bold"
+      />
+    </div>
+  );
+}
+
+function RunningBody({
+  step,
+  reduce,
+  address,
+}: {
+  step: number;
+  reduce: boolean;
+  address: string;
+}) {
+  const [sub, setSub] = useState(0);
+  const subs = SCAN_SUBSTEPS[step] ?? SCAN_SUBSTEPS[0];
+
+  useEffect(() => {
+    setSub(0);
+    if (reduce) return;
+    const id = window.setInterval(() => {
+      setSub((current) => (current + 1) % subs.length);
+    }, 900);
+    return () => window.clearInterval(id);
+  }, [step, reduce, subs.length]);
+
+  const progress = ((step + (sub + 1) / subs.length) / SCAN_STEPS.length) * 100;
+
+  return (
+    <div className="mt-5">
+      <RadarScope step={step} reduce={reduce} />
+      <p
+        className="mt-4 text-center text-sm text-ink"
+        aria-live="polite"
+      >
+        {SCAN_STEPS[step]}
+      </p>
+      <p className="mt-1 text-center font-mono text-[11px] tracking-wide text-accent">
+        {subs[sub]}
+      </p>
+      <p className="mt-2 text-center font-mono text-[11px] text-ink-faint">
+        {shortenAddress(address)}
+      </p>
+
+      <div className="mt-5 h-1 overflow-hidden rounded-full bg-line">
+        <motion.div
+          className="h-full bg-accent"
+          animate={{ width: `${Math.min(96, progress)}%` }}
+          transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 24 }}
+        />
       </div>
-      <div className="mt-5 h-px overflow-hidden bg-line">
-        <div className="h-full w-1/3 animate-scan bg-accent motion-reduce:animate-none" />
-      </div>
-      <ol className="mt-5 space-y-2.5">
+
+      <ol className="mt-5 space-y-2">
         {SCAN_STEPS.map((label, index) => {
           const done = index < step;
           const active = index === step;
           return (
-            <li key={label} className="flex items-center gap-2.5 text-sm">
+            <motion.li
+              key={label}
+              className="flex items-center gap-2.5 text-sm"
+              animate={{ opacity: done || active ? 1 : 0.4, x: active && !reduce ? 2 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
               {done ? (
                 <Check className="size-4 shrink-0 text-risk-low" weight="bold" />
               ) : active ? (
-                <CircleNotch
-                  className={`size-4 shrink-0 text-accent ${reduce ? "" : "animate-spin"}`}
-                  weight="bold"
-                />
+                <span className="relative size-4 shrink-0">
+                  <span className="absolute inset-0 rounded-full bg-accent/25" />
+                  <span className="absolute inset-1 rounded-full bg-accent" />
+                </span>
               ) : (
                 <Circle className="size-4 shrink-0 text-ink-faint" weight="regular" />
               )}
-              <span className={done || active ? "text-ink" : "text-ink-faint"}>{label}</span>
-            </li>
+              <span className={done || active ? "text-ink" : "text-ink-faint"}>
+                {label}
+              </span>
+            </motion.li>
           );
         })}
       </ol>
@@ -236,6 +370,7 @@ function SuccessBody({
   result,
   score,
   onClose,
+  reduce,
 }: {
   mode: ScanMode;
   network: XLayerNetwork;
@@ -243,12 +378,19 @@ function SuccessBody({
   result: ScanItem | null;
   score?: number;
   onClose: () => void;
+  reduce: boolean;
 }) {
   return (
     <div className="mt-6">
       <div className="flex items-start justify-between gap-4">
         {typeof score === "number" ? (
-          <ScanScore score={score} />
+          <motion.div
+            initial={reduce ? false : { scale: 0.86, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={iosSpring}
+          >
+            <ScanScore score={score} />
+          </motion.div>
         ) : (
           <p className="text-sm text-ink-muted">Published with no numeric score.</p>
         )}

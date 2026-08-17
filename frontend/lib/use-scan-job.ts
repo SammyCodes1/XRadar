@@ -10,6 +10,12 @@ export const SCAN_STEPS = [
   "Publishing the score",
 ] as const;
 
+export const SCAN_SUBSTEPS: readonly (readonly string[])[] = [
+  ["Bytecode", "WOKB pair", "Holders sample"],
+  ["Risk flags", "Plain-language note", "Score"],
+  ["Oracle wallet", "publishScore", "Confirming"],
+];
+
 export type ScanPhase = "idle" | "running" | "success" | "error";
 export type ScanMode = "scan" | "rescan";
 

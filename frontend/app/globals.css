@@ -154,6 +154,49 @@ body::before {
   animation: scan 1.4s ease-in-out infinite;
 }
 
+@keyframes radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes radar-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes radar-blip {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.radar-sweep {
+  animation: radar-sweep 2.8s linear infinite;
+  transform-origin: center;
+}
+
+.radar-breathe {
+  animation: radar-breathe 2.2s ease-in-out infinite;
+}
+
+.radar-blip {
+  animation: radar-blip 1.6s ease-in-out infinite;
+}
+
 @keyframes land-in {
   from {
     opacity: 0;
@@ -270,7 +313,10 @@ body::before {
   .animate-scan,
   .animate-ping,
   .animate-pulse,
-  .animate-spin {
+  .animate-spin,
+  .radar-sweep,
+  .radar-breathe,
+  .radar-blip {
     animation: none !important;
   }
 }
