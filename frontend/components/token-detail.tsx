@@ -11,7 +11,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getAddress, isAddress } from "viem";
 import type { Address } from "viem";
 import { useReadContract } from "wagmi";
@@ -22,7 +22,7 @@ import {
   explorerTokenUrl,
   parseScoreResult,
 } from "../lib/registry";
-import { checksForReport, decodeReportUri } from "../lib/report";
+import { checksForReport, decodeReportUri, isLegacyReport } from "../lib/report";
 import { useScanJob } from "../lib/use-scan-job";
 import { CopyAddress } from "./copy-address";
 import { useDashboard } from "./dashboard-provider";
@@ -83,6 +83,8 @@ export function TokenDetail({
   const score = onChain?.score ?? report.score?.overall ?? 0;
   const summary = report.summary;
   const stale = scanned && isScoreStale(Number(onChain!.timestamp), now);
+  const legacy = scanned && isLegacyReport(report);
+  const autoRefresh = useRef(false);
 
   function setChain(next: XLayerNetwork) {
     setNetwork(next);
@@ -95,6 +97,18 @@ export function TokenDetail({
     if (job.phase !== "success") return;
     void queryClient.invalidateQueries();
   }, [job.phase, job.result?.txHash, queryClient]);
+
+  useEffect(() => {
+    autoRefresh.current = false;
+  }, [token, network]);
+
+  useEffect(() => {
+    if (!token || !legacy || scoreQuery.isLoading || autoRefresh.current) return;
+    if (job.phase === "running") return;
+    autoRefresh.current = true;
+    setDialogOpen(true);
+    void job.run(token, network);
+  }, [token, legacy, scoreQuery.isLoading, job.phase, job.run, network]);
 
   async function onRescan() {
     if (!token || job.phase === "running") return;
@@ -246,7 +260,17 @@ export function TokenDetail({
             </div>
           ) : null}
 
-          {stale ? (
+          {legacy ? (
+            <div className="mt-6 flex items-start gap-2 rounded-lg bg-panel p-4 text-sm ring-1 ring-accent/35">
+              <Clock className="mt-0.5 size-4 shrink-0 text-accent" weight="bold" />
+              <p className="text-ink">
+                This report is from an older scan. Refreshing the twelve
+                checks.
+              </p>
+            </div>
+          ) : null}
+
+          {stale && !legacy ? (
             <div className="mt-6 flex items-start gap-2 rounded-lg bg-panel p-4 text-sm ring-1 ring-accent/35">
               <Clock className="mt-0.5 size-4 shrink-0 text-accent" weight="bold" />
               <p className="text-ink">

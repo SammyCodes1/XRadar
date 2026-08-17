@@ -5,31 +5,28 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { Address } from "viem";
-import { useReadContract, useReadContracts } from "wagmi";
 import { riskLevel, timeSince, type RiskLevel } from "../lib/format";
 import { iosSpring } from "../lib/motion";
-import {
-  RISK_REGISTRY_ABI,
-  decodeReportUri,
-  explorerTokenUrl,
-  parseScoreResult,
-} from "../lib/registry";
+import { decodeReportUri, explorerTokenUrl } from "../lib/registry";
+import { isLegacyReportUri } from "../lib/report";
+import { useRegistryRows } from "../lib/use-registry-rows";
 import { CopyAddress } from "./copy-address";
 import { useDashboard } from "./dashboard-provider";
 import { ScanScore } from "./scan-score";
 
-type FeedRow = {
-  token: Address;
-  score: number;
-  timestamp: number;
-  reportURI: string;
-};
-
 type FeedFilter = "all" | RiskLevel;
 
 export function LiveFeed() {
-  const { chainId, network, registry, lastScanned } = useDashboard();
+  const { lastScanned } = useDashboard();
+  const {
+    rows,
+    tokensQuery,
+    scoresQuery,
+    feedLoading,
+    registry,
+    chainId,
+    network,
+  } = useRegistryRows();
   const queryClient = useQueryClient();
   const reduce = useReducedMotion();
   const [now, setNow] = useState(() => Date.now());
@@ -54,57 +51,6 @@ export function LiveFeed() {
       .catch(() => undefined);
   }, [network, registry, queryClient]);
 
-  const tokensQuery = useReadContract({
-    address: registry,
-    abi: RISK_REGISTRY_ABI,
-    functionName: "getAllScannedTokens",
-    chainId,
-    query: {
-      enabled: Boolean(registry),
-      refetchInterval: 30_000,
-    },
-  });
-
-  const tokens = (tokensQuery.data ?? []) as Address[];
-
-  const scoreContracts = useMemo(
-    () =>
-      registry
-        ? tokens.map((token) => ({
-            address: registry,
-            abi: RISK_REGISTRY_ABI,
-            functionName: "getLatestScore" as const,
-            args: [token] as const,
-            chainId,
-          }))
-        : [],
-    [tokens, registry, chainId],
-  );
-
-  const scoresQuery = useReadContracts({
-    contracts: scoreContracts,
-    query: {
-      enabled: scoreContracts.length > 0,
-      refetchInterval: 30_000,
-    },
-  });
-
-  const rows = useMemo<FeedRow[]>(() => {
-    return tokens
-      .map((token, index) => {
-        const parsed = parseScoreResult(scoresQuery.data?.[index]?.result);
-        if (!parsed || parsed.timestamp === 0n) return null;
-        return {
-          token,
-          score: parsed.score,
-          timestamp: Number(parsed.timestamp),
-          reportURI: parsed.reportURI,
-        };
-      })
-      .filter((row): row is FeedRow => row !== null)
-      .sort((a, b) => b.timestamp - a.timestamp);
-  }, [tokens, scoresQuery.data]);
-
   const counts = useMemo(() => {
     const next = { all: rows.length, low: 0, medium: 0, high: 0 };
     for (const row of rows) {
@@ -122,9 +68,6 @@ export function LiveFeed() {
     tokensQuery.dataUpdatedAt,
     scoresQuery.dataUpdatedAt ?? 0,
   );
-  const feedLoading =
-    tokensQuery.isLoading ||
-    (tokens.length > 0 && scoresQuery.isPending && rows.length === 0);
 
   if (!registry) {
     return (
@@ -304,9 +247,14 @@ export function LiveFeed() {
                       )}
                     </div>
                     <div className="flex w-full flex-col items-start gap-2 md:w-auto md:flex-row md:items-center md:justify-end md:gap-4">
-                      <p className="font-mono text-xs tabular-nums text-ink-muted">
-                        {timeSince(row.timestamp, now)}
-                      </p>
+                      <div className="flex flex-col items-start gap-1 md:items-end">
+                        <p className="font-mono text-xs tabular-nums text-ink-muted">
+                          {timeSince(row.timestamp, now)}
+                        </p>
+                        {isLegacyReportUri(row.reportURI) ? (
+                          <p className="text-[11px] text-accent">Old report</p>
+                        ) : null}
+                      </div>
                       <Link
                         href={`/token/${row.token}?chain=${network}`}
                         className="inline-flex shrink-0 items-center gap-0.5 text-sm text-accent hover:text-accent-hot"

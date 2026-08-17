@@ -2,7 +2,7 @@
 
 Next.js App Router dashboard with Tailwind, viem, and wagmi. Custom chains: X Layer mainnet (`196`) and testnet (`1952`).
 
-The marketing landing lives at `/`. The scanner dashboard is at `/scan` and reads `RiskRegistry` on-chain (`getAllScannedTokens` + `getLatestScore`) and can trigger an on-demand `scanAndPublish` run through `POST /api/scan` (the route execs the services orchestrator with `--skip-detection`).
+The marketing landing lives at `/`. The scanner at `/scan` searches by name, symbol, or address, reads `RiskRegistry` on-chain, and can trigger `POST /api/scan`.
 
 ```powershell
 cd ..

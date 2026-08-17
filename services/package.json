@@ -5,7 +5,8 @@
   "description": "XRadar serverless functions: detection, risk checks, AI synthesis, oracle publisher",
   "type": "module",
   "exports": {
-    "./scanAndPublish": "./src/orchestrator/scanAndPublish.ts"
+    "./scanAndPublish": "./src/orchestrator/scanAndPublish.ts",
+    "./okxDex": "./src/risk/okxDex.ts"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",

@@ -22,6 +22,27 @@ export type DecodedRiskReport = {
   };
 };
 
+const NEW_CHECK_KEYS: ReportCheckKey[] = [
+  "liquiditySize",
+  "proxy",
+  "tradingLimits",
+  "ownerDeployer",
+  "transferTax",
+  "buySell",
+];
+
+export function isLegacyReport(report: DecodedRiskReport): boolean {
+  const keys = new Set((report.checks ?? []).map((check) => check.key));
+  if (keys.size === 0) {
+    return !report.flags?.thinLiquidity && !report.flags?.buySellBlocked;
+  }
+  return NEW_CHECK_KEYS.some((key) => !keys.has(key));
+}
+
+export function isLegacyReportUri(uri: string): boolean {
+  return isLegacyReport(decodeReportUri(uri));
+}
+
 export const CHECK_ORDER: ReportCheckKey[] = [
   "verified",
   "ownership",

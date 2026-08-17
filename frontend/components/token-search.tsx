@@ -5,10 +5,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getAddress, isAddress } from "viem";
 import { iosSpring } from "../lib/motion";
 import { explorerTxUrl } from "../lib/registry";
+import { decodeReportUri } from "../lib/report";
+import { useRegistryRows } from "../lib/use-registry-rows";
 import { useScanJob } from "../lib/use-scan-job";
 import { useDashboard } from "./dashboard-provider";
 import { ScanDialog } from "./scan-dialog";
@@ -20,6 +23,8 @@ import { WatchButton } from "./watch-button";
 
 export function TokenSearch() {
   const { network, chainId, setLastScanned } = useDashboard();
+  const router = useRouter();
+  const { rows } = useRegistryRows();
   const queryClient = useQueryClient();
   const reduce = useReducedMotion();
   const job = useScanJob();
@@ -27,6 +32,54 @@ export function TokenSearch() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [okxHits, setOkxHits] = useState<
+    { address: string; symbol?: string; name?: string }[]
+  >([]);
+
+  const query = value.trim();
+  const registryHits = useMemo(() => {
+    if (query.length < 2 || isAddress(query)) return [];
+    const needle = query.toLowerCase();
+    return rows
+      .flatMap((row) => {
+        const report = decodeReportUri(row.reportURI);
+        const symbol = report.token?.symbol ?? "";
+        const name = report.token?.name ?? "";
+        const hay = `${symbol} ${name} ${row.token}`.toLowerCase();
+        if (!hay.includes(needle)) return [];
+        return [
+          {
+            address: row.token,
+            symbol: symbol || undefined,
+            name: name || undefined,
+            score: row.score,
+            onRegistry: true,
+          },
+        ];
+      })
+      .slice(0, 6);
+  }, [query, rows]);
+
+  useEffect(() => {
+    if (query.length < 2 || isAddress(query)) {
+      setOkxHits([]);
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      void fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        .then((response) => response.json())
+        .then((body: { hits?: { address: string; symbol?: string; name?: string }[] }) => {
+          const known = new Set(registryHits.map((hit) => hit.address.toLowerCase()));
+          setOkxHits(
+            (body.hits ?? []).filter(
+              (hit) => !known.has(hit.address.toLowerCase()),
+            ),
+          );
+        })
+        .catch(() => setOkxHits([]));
+    }, 280);
+    return () => window.clearTimeout(handle);
+  }, [query, registryHits]);
 
   useEffect(() => {
     if (job.phase !== "success" || !job.result) return;
@@ -36,19 +89,35 @@ export function TokenSearch() {
     }
   }, [job.phase, job.result, queryClient, setLastScanned]);
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const raw = value.trim();
-    if (!isAddress(raw)) {
-      setFieldError("Paste a 0x-prefixed 40-character contract address.");
-      return;
-    }
-
+  async function startScan(raw: string) {
+    if (!isAddress(raw)) return;
     const address = getAddress(raw);
     setFieldError(null);
     setActiveAddress(address);
     setDialogOpen(true);
     await job.run(address, network);
+  }
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const raw = value.trim();
+    if (isAddress(raw)) {
+      await startScan(raw);
+      return;
+    }
+    if (registryHits.length === 1 && okxHits.length === 0) {
+      router.push(`/token/${registryHits[0].address}?chain=${network}`);
+      return;
+    }
+    if (registryHits.length === 0 && okxHits.length === 1) {
+      await startScan(okxHits[0].address);
+      return;
+    }
+    if (registryHits.length > 0 || okxHits.length > 0) {
+      setFieldError("Pick a token from the list, or paste a 0x address.");
+      return;
+    }
+    setFieldError("No token with that name on this registry. Paste a 0x address to scan a new one.");
   }
 
   async function onRetry() {
@@ -78,9 +147,8 @@ export function TokenSearch() {
             Screen a token
           </h1>
           <p className="mt-3 max-w-[42ch] text-sm leading-6 text-ink-muted sm:text-[15px] sm:leading-7">
-            Paste an X Layer contract, or let auto-discovery pick up new DEX
-            listings. Scores write to RiskRegistry, then this page reads them
-            back.
+            Search by name, symbol, or 0x address. Auto-discovery also picks
+            up new DEX listings. Scores write to RiskRegistry.
           </p>
         </motion.div>
 
@@ -118,7 +186,7 @@ export function TokenSearch() {
           >
             <div className="scan-well flex flex-col gap-2 p-1.5 sm:flex-row sm:items-stretch">
               <label htmlFor="token-address" className="sr-only">
-                Token contract address
+                Token name, symbol, or address
               </label>
               <input
                 id="token-address"
@@ -131,9 +199,9 @@ export function TokenSearch() {
                 spellCheck={false}
                 autoComplete="off"
                 autoCapitalize="off"
-                placeholder="0x..."
+                placeholder="Name, symbol, or 0x..."
                 disabled={job.phase === "running"}
-                className="min-h-12 w-full flex-1 rounded-md bg-transparent px-4 font-mono text-base text-ink outline-none placeholder:text-ink-faint focus:ring-0 disabled:opacity-60 sm:min-h-14 sm:text-sm"
+                className="min-h-12 w-full flex-1 rounded-md bg-transparent px-4 text-base text-ink outline-none placeholder:text-ink-faint focus:ring-0 disabled:opacity-60 sm:min-h-14 sm:text-sm"
               />
               <motion.button
                 type="submit"
@@ -143,12 +211,12 @@ export function TokenSearch() {
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-accent px-6 text-sm font-medium text-on-accent hover:bg-accent-hot disabled:opacity-60 sm:min-h-14"
               >
                 <MagnifyingGlass className="size-4" weight="bold" />
-                {job.phase === "running" ? "Scanning" : "Scan"}
+                {job.phase === "running" ? "Scanning" : isAddress(query) ? "Scan" : "Search"}
               </motion.button>
             </div>
           </form>
           <p id="token-address-hint" className="mt-3 max-w-[62ch] text-xs leading-5 text-ink-muted">
-            Oracle pipeline, then publishScore on {network}.
+            Search the registry by name or symbol, or paste an address to scan.
           </p>
           {fieldError ? (
             <p className="mt-2 text-sm text-risk-high" role="alert">
@@ -156,6 +224,55 @@ export function TokenSearch() {
             </p>
           ) : null}
         </motion.div>
+
+        {registryHits.length > 0 || okxHits.length > 0 ? (
+          <ul className="scan-bezel mt-3">
+            <div className="scan-well divide-y divide-line">
+              {registryHits.map((hit) => (
+                <li key={hit.address}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      router.push(`/token/${hit.address}?chain=${network}`)
+                    }
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-raised"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm text-ink">
+                        {[hit.symbol, hit.name].filter(Boolean).join(" ") || "Unnamed"}
+                      </span>
+                      <span className="mt-0.5 block truncate font-mono text-[11px] text-ink-muted">
+                        {hit.address}
+                      </span>
+                    </span>
+                    <span className="font-mono text-sm tabular-nums text-ink-muted">
+                      {hit.score}
+                    </span>
+                  </button>
+                </li>
+              ))}
+              {okxHits.map((hit) => (
+                <li key={hit.address}>
+                  <button
+                    type="button"
+                    onClick={() => void startScan(hit.address)}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-raised"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm text-ink">
+                        {[hit.symbol, hit.name].filter(Boolean).join(" ") || "Unnamed"}
+                      </span>
+                      <span className="mt-0.5 block truncate font-mono text-[11px] text-ink-muted">
+                        {hit.address}
+                      </span>
+                    </span>
+                    <span className="text-[11px] text-ink-faint">Not scanned</span>
+                  </button>
+                </li>
+              ))}
+            </div>
+          </ul>
+        ) : null}
 
         <AnimatePresence>
           {showResult ? (

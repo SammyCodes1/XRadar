@@ -72,6 +72,7 @@ export async function runDiscover(chain: XLayerNetwork): Promise<{
     lookback: 200,
     maxBlocks: 200,
     maxTokens: 2,
+    refreshLegacy: true,
   });
   return {
     chain: result.chain,

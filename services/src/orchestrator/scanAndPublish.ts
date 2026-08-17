@@ -1,10 +1,16 @@
 import type { Address, Hex } from "viem";
 import type { DiscoveredToken, RiskReport, XLayerNetwork } from "@xradar/shared";
 import { getNetwork, requireNetwork } from "@xradar/shared";
+import { createXLayerPublicClient } from "../detection/client";
 import { MemoryDetectionStore } from "../detection/store";
 import { scanNewTokens } from "../detection/scan";
+import { isLegacyReportUri } from "../publish/legacyReport";
 import { publishToRegistry } from "../publish/publishToRegistry";
-import { readScannedTokens } from "../publish/registry";
+import {
+  RISK_REGISTRY_ABI,
+  readScannedTokens,
+  registryAddress,
+} from "../publish/registry";
 import { runRiskChecks } from "../risk/runRiskChecks";
 import { announcePublishedToken } from "../social/announce";
 import type { AnnounceResult } from "../social/announce";
@@ -43,7 +49,35 @@ export type ScanAndPublishOptions = {
   persist?: boolean;
   includeCreates?: boolean;
   skipKnown?: boolean;
+  refreshLegacy?: boolean;
 };
+
+async function collectLegacyTokens(
+  chain: XLayerNetwork,
+  known: Address[],
+  limit: number,
+): Promise<Address[]> {
+  if (limit <= 0 || known.length === 0) return [];
+  const client = createXLayerPublicClient(chain);
+  const registry = registryAddress(chain);
+  const found: Address[] = [];
+  for (const token of known) {
+    if (found.length >= limit) break;
+    try {
+      const latest = await client.readContract({
+        address: registry,
+        abi: RISK_REGISTRY_ABI,
+        functionName: "getLatestScore",
+        args: [token],
+      });
+      const uri = String(latest[1] ?? "");
+      if (isLegacyReportUri(uri)) found.push(token);
+    } catch {
+      // skip unreadable rows
+    }
+  }
+  return found;
+}
 
 function logFlow(message: string): void {
   console.log(`[pipeline] ${message}`);
@@ -148,6 +182,31 @@ export async function scanAndPublish(
       `scan ${chain} blocks=${scan.fromBlock}..${scan.toBlock} new=${scan.newTokens.length}`,
     );
   }
+  if (options.refreshLegacy && discovered.length < maxTokens) {
+    const legacy = await collectLegacyTokens(
+      chain,
+      known,
+      maxTokens - discovered.length,
+    );
+    for (const address of legacy) {
+      if (
+        discovered.some((token) => token.address.toLowerCase() === address.toLowerCase())
+      ) {
+        continue;
+      }
+      discovered.push({
+        address,
+        chainId: getNetwork(chain).chainId,
+        deployer: "0x0000000000000000000000000000000000000000",
+        deploymentBlock: 0,
+        deploymentTimestamp: 0,
+        txHash: "0x",
+        source: "contract-create",
+      });
+      logFlow(`legacy refresh queued → ${address}`);
+    }
+  }
+
   const forced = options.forceTokens ?? [];
   for (const address of forced) {
     if (

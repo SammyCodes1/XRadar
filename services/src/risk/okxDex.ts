@@ -231,4 +231,58 @@ export async function getOkxSwapTx(params: {
   }
 }
 
+export type OkxTokenHit = {
+  address: Address;
+  symbol?: string;
+  name?: string;
+};
+
+export async function searchOkxTokens(query: string): Promise<OkxTokenHit[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+  const attempts: { path: string; params: Record<string, string> }[] = [
+    {
+      path: "/api/v6/dex/aggregator/search",
+      params: { chainIndex: "196", search: trimmed },
+    },
+    {
+      path: "/api/v5/dex/aggregator/search",
+      params: { chainId: "196", search: trimmed },
+    },
+    {
+      path: "/api/v6/dex/market/token/search",
+      params: { chainIndex: "196", search: trimmed },
+    },
+  ];
+  for (const attempt of attempts) {
+    try {
+      const data = await okxGet(attempt.path, attempt.params);
+      const rows = Array.isArray(data)
+        ? data
+        : asRecord(data)?.tokens ??
+          asRecord(data)?.data ??
+          asRecord(data)?.list;
+      if (!Array.isArray(rows)) continue;
+      const hits: OkxTokenHit[] = [];
+      for (const row of rows) {
+        const rec = asRecord(row);
+        const address = pickAddress(
+          rec?.tokenContractAddress ?? rec?.tokenAddress ?? rec?.address,
+          "0x0000000000000000000000000000000000000000",
+        );
+        if (address === "0x0000000000000000000000000000000000000000") continue;
+        hits.push({
+          address,
+          symbol: typeof rec?.tokenSymbol === "string" ? rec.tokenSymbol : typeof rec?.symbol === "string" ? rec.symbol : undefined,
+          name: typeof rec?.tokenName === "string" ? rec.tokenName : typeof rec?.name === "string" ? rec.name : undefined,
+        });
+      }
+      if (hits.length > 0) return hits.slice(0, 8);
+    } catch {
+      // try the next search path
+    }
+  }
+  return [];
+}
+
 export { OKX_NATIVE_TOKEN, OKX_DEX_ROUTER_XLAYER };
