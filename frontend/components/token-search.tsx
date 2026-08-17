@@ -35,6 +35,7 @@ export function TokenSearch() {
   const [okxHits, setOkxHits] = useState<
     { address: string; symbol?: string; name?: string }[]
   >([]);
+  const [searching, setSearching] = useState(false);
 
   const query = value.trim();
   const registryHits = useMemo(() => {
@@ -63,10 +64,14 @@ export function TokenSearch() {
   useEffect(() => {
     if (query.length < 2 || isAddress(query)) {
       setOkxHits([]);
+      setSearching(false);
       return;
     }
     const handle = window.setTimeout(() => {
-      void fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      setSearching(true);
+      void fetch(
+        `/api/search?q=${encodeURIComponent(query)}&chain=${network}`,
+      )
         .then((response) => response.json())
         .then((body: { hits?: { address: string; symbol?: string; name?: string }[] }) => {
           const known = new Set(registryHits.map((hit) => hit.address.toLowerCase()));
@@ -76,10 +81,11 @@ export function TokenSearch() {
             ),
           );
         })
-        .catch(() => setOkxHits([]));
+        .catch(() => setOkxHits([]))
+        .finally(() => setSearching(false));
     }, 280);
     return () => window.clearTimeout(handle);
-  }, [query, registryHits]);
+  }, [query, registryHits, network]);
 
   useEffect(() => {
     if (job.phase !== "success" || !job.result) return;
@@ -105,19 +111,40 @@ export function TokenSearch() {
       await startScan(raw);
       return;
     }
-    if (registryHits.length === 1 && okxHits.length === 0) {
+    setSearching(true);
+    let listed: { address: string; symbol?: string; name?: string }[] = [];
+    try {
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(raw)}&chain=${network}`,
+      );
+      const body = (await response.json()) as {
+        hits?: { address: string; symbol?: string; name?: string }[];
+      };
+      listed = body.hits ?? [];
+    } catch {
+      listed = [];
+    } finally {
+      setSearching(false);
+    }
+    const known = new Set(registryHits.map((hit) => hit.address.toLowerCase()));
+    const extra = listed.filter((hit) => !known.has(hit.address.toLowerCase()));
+    setOkxHits(extra);
+
+    if (registryHits.length === 1 && extra.length === 0) {
       router.push(`/token/${registryHits[0].address}?chain=${network}`);
       return;
     }
-    if (registryHits.length === 0 && okxHits.length === 1) {
-      await startScan(okxHits[0].address);
+    if (registryHits.length === 0 && extra.length === 1) {
+      await startScan(extra[0].address);
       return;
     }
-    if (registryHits.length > 0 || okxHits.length > 0) {
-      setFieldError("Pick a token from the list, or paste a 0x address.");
+    if (registryHits.length > 0 || extra.length > 0) {
+      setFieldError("Pick a token from the list.");
       return;
     }
-    setFieldError("No token with that name on this registry. Paste a 0x address to scan a new one.");
+    setFieldError(
+      "No token with that name on X Layer yet. Try another spelling or paste the 0x address.",
+    );
   }
 
   async function onRetry() {
@@ -205,18 +232,30 @@ export function TokenSearch() {
               />
               <motion.button
                 type="submit"
-                disabled={job.phase === "running"}
-                whileHover={reduce || job.phase === "running" ? undefined : { scale: 1.02 }}
-                whileTap={job.phase === "running" ? undefined : { scale: 0.97 }}
+                disabled={job.phase === "running" || searching}
+                whileHover={
+                  reduce || job.phase === "running" || searching
+                    ? undefined
+                    : { scale: 1.02 }
+                }
+                whileTap={
+                  job.phase === "running" || searching ? undefined : { scale: 0.97 }
+                }
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-accent px-6 text-sm font-medium text-on-accent hover:bg-accent-hot disabled:opacity-60 sm:min-h-14"
               >
                 <MagnifyingGlass className="size-4" weight="bold" />
-                {job.phase === "running" ? "Scanning" : isAddress(query) ? "Scan" : "Search"}
+                {job.phase === "running"
+                  ? "Scanning"
+                  : searching
+                    ? "Searching"
+                    : isAddress(query)
+                      ? "Scan"
+                      : "Search"}
               </motion.button>
             </div>
           </form>
           <p id="token-address-hint" className="mt-3 max-w-[62ch] text-xs leading-5 text-ink-muted">
-            Search the registry by name or symbol, or paste an address to scan.
+            Type a meme name or symbol even if it has not been scanned here yet.
           </p>
           {fieldError ? (
             <p className="mt-2 text-sm text-risk-high" role="alert">

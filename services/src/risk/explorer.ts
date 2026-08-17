@@ -1,3 +1,4 @@
+import type { Address } from "viem";
 import { env } from "../lib/env";
 
 export type ExplorerNetwork = "mainnet" | "testnet";
@@ -83,6 +84,60 @@ export type ExplorerHolder = {
   address: string;
   amount: string;
 };
+
+export async function searchExplorerTokens(
+  chain: ExplorerNetwork,
+  query: string,
+): Promise<{ address: Address; symbol?: string; name?: string }[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+  const paths = ["token/token-list", "token/search", "tokenlist"];
+  const queries: Record<string, string>[] = [
+    { token: trimmed, protocolType: "token_20", limit: "20" },
+    { tokenName: trimmed, limit: "20" },
+    { keyword: trimmed, limit: "20" },
+  ];
+  for (const path of paths) {
+    for (const extra of queries) {
+      const result = await oklinkGet(path, {
+        chainShortName: chainShortName(chain),
+        ...extra,
+      });
+      if (!result.ok) continue;
+      const rows = Array.isArray(result.data)
+        ? result.data
+        : asRecord(result.data)?.["tokenList"] ??
+          asRecord(result.data)?.["list"];
+      if (!Array.isArray(rows)) continue;
+      const hits: { address: Address; symbol?: string; name?: string }[] = [];
+      for (const row of rows) {
+        const rec = asRecord(row);
+        if (!rec) continue;
+        const addr = String(
+          rec.tokenContractAddress ?? rec.contractAddress ?? rec.address ?? "",
+        );
+        if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) continue;
+        hits.push({
+          address: addr.toLowerCase() as Address,
+          symbol:
+            typeof rec.tokenSymbol === "string"
+              ? rec.tokenSymbol
+              : typeof rec.symbol === "string"
+                ? rec.symbol
+                : undefined,
+          name:
+            typeof rec.tokenName === "string"
+              ? rec.tokenName
+              : typeof rec.name === "string"
+                ? rec.name
+                : undefined,
+        });
+      }
+      if (hits.length > 0) return hits.slice(0, 8);
+    }
+  }
+  return [];
+}
 
 export async function fetchTokenHolders(
   chain: ExplorerNetwork,

@@ -237,10 +237,78 @@ export type OkxTokenHit = {
   name?: string;
 };
 
+function collectRows(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data;
+  const rec = asRecord(data);
+  if (!rec) return [];
+  for (const key of ["items", "tokens", "list", "tokenList", "hits"]) {
+    const value = rec[key];
+    if (Array.isArray(value)) return value;
+  }
+  return [];
+}
+
+function hitFromRow(row: unknown): OkxTokenHit | null {
+  const rec = asRecord(row);
+  if (!rec) return null;
+  const nested = asRecord(rec.tokenInfo) ?? asRecord(rec.token);
+  const address = pickAddress(
+    rec.tokenContractAddress ??
+      rec.tokenAddress ??
+      rec.address ??
+      nested?.tokenContractAddress ??
+      nested?.address,
+    "0x0000000000000000000000000000000000000000",
+  );
+  if (address === "0x0000000000000000000000000000000000000000") return null;
+  const symbol =
+    (typeof rec.tokenSymbol === "string" && rec.tokenSymbol) ||
+    (typeof rec.symbol === "string" && rec.symbol) ||
+    (typeof nested?.tokenSymbol === "string" && nested.tokenSymbol) ||
+    undefined;
+  const name =
+    (typeof rec.tokenName === "string" && rec.tokenName) ||
+    (typeof rec.name === "string" && rec.name) ||
+    (typeof nested?.tokenName === "string" && nested.tokenName) ||
+    undefined;
+  return { address, symbol, name };
+}
+
+let allTokensCache: { at: number; hits: OkxTokenHit[] } | null = null;
+
+async function searchAllTokensCache(query: string): Promise<OkxTokenHit[]> {
+  const now = Date.now();
+  if (!allTokensCache || now - allTokensCache.at > 5 * 60_000) {
+    const data = await okxGet("/api/v6/dex/aggregator/all-tokens", {
+      chainIndex: "196",
+    });
+    const hits: OkxTokenHit[] = [];
+    for (const row of collectRows(data)) {
+      const hit = hitFromRow(row);
+      if (hit) hits.push(hit);
+    }
+    allTokensCache = { at: now, hits };
+  }
+  const needle = query.toLowerCase();
+  return allTokensCache.hits.filter((hit) => {
+    const symbol = (hit.symbol ?? "").toLowerCase();
+    const name = (hit.name ?? "").toLowerCase();
+    return symbol.includes(needle) || name.includes(needle);
+  });
+}
+
 export async function searchOkxTokens(query: string): Promise<OkxTokenHit[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
   const attempts: { path: string; params: Record<string, string> }[] = [
+    {
+      path: "/api/v6/dex/market/token/search",
+      params: { chains: "196", search: trimmed, limit: "20" },
+    },
+    {
+      path: "/api/v6/dex/market/token/search",
+      params: { chainIndex: "196", search: trimmed },
+    },
     {
       path: "/api/v6/dex/aggregator/search",
       params: { chainIndex: "196", search: trimmed },
@@ -249,40 +317,25 @@ export async function searchOkxTokens(query: string): Promise<OkxTokenHit[]> {
       path: "/api/v5/dex/aggregator/search",
       params: { chainId: "196", search: trimmed },
     },
-    {
-      path: "/api/v6/dex/market/token/search",
-      params: { chainIndex: "196", search: trimmed },
-    },
   ];
   for (const attempt of attempts) {
     try {
       const data = await okxGet(attempt.path, attempt.params);
-      const rows = Array.isArray(data)
-        ? data
-        : asRecord(data)?.tokens ??
-          asRecord(data)?.data ??
-          asRecord(data)?.list;
-      if (!Array.isArray(rows)) continue;
       const hits: OkxTokenHit[] = [];
-      for (const row of rows) {
-        const rec = asRecord(row);
-        const address = pickAddress(
-          rec?.tokenContractAddress ?? rec?.tokenAddress ?? rec?.address,
-          "0x0000000000000000000000000000000000000000",
-        );
-        if (address === "0x0000000000000000000000000000000000000000") continue;
-        hits.push({
-          address,
-          symbol: typeof rec?.tokenSymbol === "string" ? rec.tokenSymbol : typeof rec?.symbol === "string" ? rec.symbol : undefined,
-          name: typeof rec?.tokenName === "string" ? rec.tokenName : typeof rec?.name === "string" ? rec.name : undefined,
-        });
+      for (const row of collectRows(data)) {
+        const hit = hitFromRow(row);
+        if (hit) hits.push(hit);
       }
       if (hits.length > 0) return hits.slice(0, 8);
     } catch {
       // try the next search path
     }
   }
-  return [];
+  try {
+    return (await searchAllTokensCache(trimmed)).slice(0, 8);
+  } catch {
+    return [];
+  }
 }
 
 export { OKX_NATIVE_TOKEN, OKX_DEX_ROUTER_XLAYER };

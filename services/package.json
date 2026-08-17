@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     "./scanAndPublish": "./src/orchestrator/scanAndPublish.ts",
-    "./okxDex": "./src/risk/okxDex.ts"
+    "./okxDex": "./src/risk/okxDex.ts",
+    "./searchTokens": "./src/risk/searchTokens.ts"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
