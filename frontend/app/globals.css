@@ -197,6 +197,158 @@ body::before {
   animation: radar-blip 1.6s ease-in-out infinite;
 }
 
+@keyframes synth-write {
+  0% {
+    transform: scaleX(0.15);
+    opacity: 0.3;
+  }
+  55% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.45;
+  }
+}
+
+@keyframes synth-sheet {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes publish-ring {
+  0% {
+    transform: scale(0.45);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes publish-seal {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.92);
+  }
+  70% {
+    transform: scale(1.06);
+  }
+}
+
+.synth-write {
+  transform-origin: left center;
+  animation: synth-write 1.35s ease-in-out infinite;
+}
+
+.synth-sheet {
+  animation: synth-sheet 2s ease-in-out infinite;
+}
+
+.publish-ring {
+  animation: publish-ring 1.8s ease-out infinite;
+}
+
+.publish-seal {
+  animation: publish-seal 1.6s ease-in-out infinite;
+}
+
+@keyframes synth-pen {
+  0% {
+    transform: translate(0, 0) rotate(-18deg);
+  }
+  35% {
+    transform: translate(-12px, 8px) rotate(-6deg);
+  }
+  70% {
+    transform: translate(8px, 18px) rotate(-20deg);
+  }
+  100% {
+    transform: translate(-2px, 26px) rotate(-10deg);
+  }
+}
+
+@keyframes synth-flag {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  36%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes publish-dash {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scaleY(0.35);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scaleY(0.55);
+  }
+}
+
+@keyframes stage-icon {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes hex-flicker {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.synth-pen {
+  transform-origin: bottom left;
+  animation: synth-pen 1.8s ease-in-out infinite;
+}
+
+.synth-flag {
+  animation: synth-flag 2.4s ease-out infinite;
+}
+
+.publish-dash {
+  animation: publish-dash 1.4s ease-out infinite;
+}
+
+.stage-icon {
+  animation: stage-icon 1.7s ease-in-out infinite;
+}
+
+.hex-flicker {
+  animation: hex-flicker 1.8s ease-in-out infinite;
+}
+
 @keyframes land-in {
   from {
     opacity: 0;
@@ -316,7 +468,16 @@ body::before {
   .animate-spin,
   .radar-sweep,
   .radar-breathe,
-  .radar-blip {
+  .radar-blip,
+  .synth-write,
+  .synth-sheet,
+  .synth-pen,
+  .synth-flag,
+  .publish-ring,
+  .publish-seal,
+  .publish-dash,
+  .stage-icon,
+  .hex-flicker {
     animation: none !important;
   }
 }

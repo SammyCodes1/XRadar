@@ -2,8 +2,10 @@
 
 import {
   ArrowRight,
+  Broadcast,
   Check,
   Circle,
+  NotePencil,
   Scan,
   WarningCircle,
   X,
@@ -46,6 +48,17 @@ const BLIPS = [
   { x: 30, y: 62, delay: "0.35s" },
   { x: 74, y: 70, delay: "0.7s" },
 ] as const;
+
+const HEX_BITS = [
+  { label: "0x60", x: 8, y: 18, delay: "0s" },
+  { label: "LP", x: 78, y: 16, delay: "0.4s" },
+  { label: "OKB", x: 6, y: 80, delay: "0.8s" },
+  { label: "bal", x: 76, y: 78, delay: "1.1s" },
+] as const;
+
+const SYNTH_FLAGS = ["liq", "own", "tax"] as const;
+
+const STEP_ICONS = [Scan, NotePencil, Broadcast] as const;
 
 export function ScanDialog({
   open,
@@ -231,16 +244,36 @@ export function ScanDialog({
   );
 }
 
-function RadarScope({
+function StageVisual({
   step,
   reduce,
 }: {
   step: number;
   reduce: boolean;
 }) {
-  const visibleBlips = BLIPS.slice(0, step + 1);
   return (
-    <div className="relative mx-auto aspect-square w-[11.5rem]">
+    <div className="relative mx-auto aspect-square w-[11.5rem]" aria-hidden>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          className="absolute inset-0"
+          initial={reduce ? false : { opacity: 0, scale: 0.86, rotate: -6 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          exit={reduce ? undefined : { opacity: 0, scale: 1.08, rotate: 6 }}
+          transition={{ duration: 0.3 }}
+        >
+          {step <= 0 ? <ReadVisual reduce={reduce} /> : null}
+          {step === 1 ? <SynthesizeVisual reduce={reduce} /> : null}
+          {step >= 2 ? <PublishVisual reduce={reduce} /> : null}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function ReadVisual({ reduce }: { reduce: boolean }) {
+  return (
+    <>
       <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(196,92,38,0.16),transparent_62%)]" />
       <div
         className={`absolute inset-3 rounded-full border border-accent/25 ${
@@ -262,25 +295,149 @@ function RadarScope({
           />
         </div>
       ) : null}
-      {visibleBlips.map((blip, index) => (
+      {BLIPS.map((blip) => (
         <span
           key={`${blip.x}-${blip.y}`}
-          className={`absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ${
-            reduce ? "" : "radar-blip"
+          className="absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ left: `${blip.x}%`, top: `${blip.y}%` }}
+        >
+          <span
+            className={`block size-1.5 rounded-full bg-accent ${
+              reduce ? "" : "radar-blip"
+            }`}
+            style={{ animationDelay: reduce ? undefined : blip.delay }}
+          />
+        </span>
+      ))}
+      {HEX_BITS.map((bit) => (
+        <span
+          key={bit.label}
+          className={`absolute -translate-x-1/2 -translate-y-1/2 font-mono text-[9px] tracking-wide text-accent/80 ${
+            reduce ? "" : "hex-flicker"
           }`}
           style={{
-            left: `${blip.x}%`,
-            top: `${blip.y}%`,
-            animationDelay: reduce ? undefined : blip.delay,
-            opacity: index === step ? 1 : 0.45,
+            left: `${bit.x}%`,
+            top: `${bit.y}%`,
+            animationDelay: reduce ? undefined : bit.delay,
           }}
-        />
+        >
+          {bit.label}
+        </span>
       ))}
       <Scan
-        className="absolute inset-0 m-auto size-6 text-accent"
+        className={`absolute inset-0 m-auto size-7 text-accent ${
+          reduce ? "" : "stage-icon"
+        }`}
         weight="bold"
       />
-    </div>
+    </>
+  );
+}
+
+function SynthesizeVisual({ reduce }: { reduce: boolean }) {
+  return (
+    <>
+      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(196,92,38,0.1),transparent_66%)]" />
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div
+          className={`relative h-[7.6rem] w-[5.7rem] rounded-md bg-raised shadow-[0_12px_28px_rgba(26,16,11,0.28)] ring-1 ring-line ${
+            reduce ? "" : "synth-sheet"
+          }`}
+        >
+          <span className="absolute inset-x-2.5 top-2.5 h-1 rounded-full bg-accent/30" />
+          <div className="absolute inset-x-2.5 top-6 space-y-2">
+            {[0, 1, 2, 3].map((line) => (
+              <span
+                key={line}
+                className={`block h-1 rounded-full bg-accent/80 ${
+                  reduce ? "" : "synth-write"
+                }`}
+                style={{
+                  width: line === 3 ? "58%" : "100%",
+                  animationDelay: reduce ? undefined : `${line * 0.18}s`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="absolute inset-x-2 bottom-2.5 flex gap-1">
+            {SYNTH_FLAGS.map((flag, index) => (
+              <span
+                key={flag}
+                className={`rounded-[3px] px-1 py-0.5 font-mono text-[8px] uppercase tracking-wide text-accent ring-1 ring-accent/30 ${
+                  reduce ? "" : "synth-flag"
+                }`}
+                style={{
+                  animationDelay: reduce ? undefined : `${0.18 + index * 0.28}s`,
+                }}
+              >
+                {flag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <NotePencil
+        className={`absolute bottom-[2.15rem] right-[2.05rem] size-7 text-accent ${
+          reduce ? "" : "synth-pen"
+        }`}
+        weight="bold"
+      />
+    </>
+  );
+}
+
+function PublishVisual({ reduce }: { reduce: boolean }) {
+  return (
+    <>
+      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(196,92,38,0.2),transparent_62%)]" />
+      <span
+        className={`absolute inset-4 rounded-full border border-accent/40 ${
+          reduce ? "" : "publish-ring"
+        }`}
+      />
+      <span
+        className={`absolute inset-7 rounded-full border border-accent/30 ${
+          reduce ? "" : "publish-ring"
+        }`}
+        style={{ animationDelay: reduce ? undefined : "0.4s" }}
+      />
+      <span
+        className={`absolute inset-10 rounded-full border border-accent/20 ${
+          reduce ? "" : "publish-ring"
+        }`}
+        style={{ animationDelay: reduce ? undefined : "0.8s" }}
+      />
+      <span className="absolute inset-[3.7rem] rounded-full border border-line" />
+      {!reduce ? (
+        <>
+          <span className="absolute left-1/2 top-1.5 -translate-x-1/2">
+            <span className="publish-dash block h-6 w-px bg-accent/75" />
+          </span>
+          <span className="absolute right-5 top-7 origin-bottom rotate-45">
+            <span
+              className="publish-dash block h-5 w-px bg-accent/50"
+              style={{ animationDelay: "0.28s" }}
+            />
+          </span>
+          <span className="absolute left-5 top-7 origin-bottom -rotate-45">
+            <span
+              className="publish-dash block h-5 w-px bg-accent/50"
+              style={{ animationDelay: "0.52s" }}
+            />
+          </span>
+        </>
+      ) : null}
+      <div
+        className={`absolute inset-0 m-auto flex size-16 items-center justify-center rounded-full bg-raised ring-1 ring-accent/50 ${
+          reduce ? "" : "publish-seal"
+        }`}
+      >
+        <Broadcast
+          className={`size-7 text-accent ${reduce ? "" : "stage-icon"}`}
+          weight="bold"
+        />
+      </div>
+    </>
   );
 }
 
@@ -309,7 +466,7 @@ function RunningBody({
 
   return (
     <div className="mt-5">
-      <RadarScope step={step} reduce={reduce} />
+      <StageVisual step={step} reduce={reduce} />
       <p
         className="mt-4 text-center text-sm text-ink"
         aria-live="polite"
@@ -335,6 +492,7 @@ function RunningBody({
         {SCAN_STEPS.map((label, index) => {
           const done = index < step;
           const active = index === step;
+          const Icon = STEP_ICONS[index] ?? Scan;
           return (
             <motion.li
               key={label}
@@ -345,10 +503,7 @@ function RunningBody({
               {done ? (
                 <Check className="size-4 shrink-0 text-risk-low" weight="bold" />
               ) : active ? (
-                <span className="relative size-4 shrink-0">
-                  <span className="absolute inset-0 rounded-full bg-accent/25" />
-                  <span className="absolute inset-1 rounded-full bg-accent" />
-                </span>
+                <Icon className="size-4 shrink-0 text-accent" weight="bold" />
               ) : (
                 <Circle className="size-4 shrink-0 text-ink-faint" weight="regular" />
               )}
