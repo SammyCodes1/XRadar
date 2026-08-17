@@ -83,15 +83,6 @@ export const env = {
       ""
     );
   },
-  xAlertsEnabledFor(network: "mainnet" | "testnet") {
-    if (!this.xAlertsEnabled) return false;
-    if (network === "mainnet") {
-      const raw = (process.env.X_ALERTS_MAINNET ?? "true").toLowerCase();
-      return raw !== "0" && raw !== "false" && raw !== "off";
-    }
-    const raw = (process.env.X_ALERTS_TESTNET ?? "false").toLowerCase();
-    return raw === "1" || raw === "true" || raw === "on";
-  },
   get deepseekApiKey() {
     return process.env.DEEPSEEK_API_KEY ?? "";
   },
@@ -102,32 +93,6 @@ export const env = {
     return (
       process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com"
     ).replace(/\/$/, "");
-  },
-  get xApiKey() {
-    return process.env.X_API_KEY ?? "";
-  },
-  get xApiSecret() {
-    return process.env.X_API_SECRET ?? "";
-  },
-  get xAccessToken() {
-    return process.env.X_ACCESS_TOKEN ?? "";
-  },
-  get xAccessTokenSecret() {
-    return process.env.X_ACCESS_TOKEN_SECRET ?? "";
-  },
-  get xBearerToken() {
-    return process.env.X_BEARER_TOKEN ?? "";
-  },
-  get frontendUrl() {
-    return process.env.FRONTEND_URL ?? "http://localhost:3000";
-  },
-  get xAlertMinScore() {
-    const raw = Number(process.env.X_ALERT_MIN_SCORE ?? 70);
-    return Number.isFinite(raw) ? raw : 70;
-  },
-  get xAlertsEnabled() {
-    const raw = (process.env.X_ALERTS_ENABLED ?? "true").toLowerCase();
-    return raw !== "0" && raw !== "false" && raw !== "off";
   },
   get explorerApiKey() {
     return process.env.EXPLORER_API_KEY ?? "";

@@ -430,7 +430,7 @@ export function checksFromFindings(findings: RiskFindings): ReportCheck[] {
 }
 
 /**
- * Higher number = more risk. Matches dashboard badges and X alerts
+ * Higher number = more risk. Matches dashboard badges
  * (low < 34, medium < 67, high >= 67).
  */
 export function scoreFromFindings(findings: RiskFindings): RiskScore {

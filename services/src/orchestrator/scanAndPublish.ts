@@ -12,8 +12,6 @@ import {
   registryAddress,
 } from "../publish/registry";
 import { runRiskChecks } from "../risk/runRiskChecks";
-import { announcePublishedToken } from "../social/announce";
-import type { AnnounceResult } from "../social/announce";
 import { synthesizeReport } from "../synthesis/synthesizeReport";
 
 export type PipelineItem = {
@@ -24,7 +22,6 @@ export type PipelineItem = {
   report?: RiskReport;
   txHash?: Hex;
   score?: number;
-  tweet?: AnnounceResult;
   error?: string;
 };
 
@@ -113,16 +110,6 @@ async function processToken(
     item.txHash = published.txHash;
     item.score = published.score;
     logFlow(`published on-chain → ${token} tx=${published.txHash}`);
-
-    item.tweet = await announcePublishedToken({
-      token,
-      chain,
-      score: published.score,
-      report,
-    });
-    logFlow(
-      `x alert → ${token} status=${item.tweet.status} reason=${item.tweet.reason ?? "ok"} id=${item.tweet.tweetId ?? "n/a"}`,
-    );
     return item;
   } catch (error) {
     item.stage = "failed";

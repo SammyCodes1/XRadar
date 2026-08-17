@@ -85,12 +85,7 @@ npm run pipeline:testnet
 npm run pipeline:testnet -- --force 0xYourToken
 ```
 
-`reportURI` is a `data:application/json,...` URI. After `publishScore`, X alerts fire when `score >= 70` or honeypot is set, if OAuth 1.0a tokens are present (`X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`).
-
-```powershell
-cd services
-npm run x:announce -- --token 0xD44Dec3B0617Fb707D4101814a51a6741469cebe --score 81 --flags honeypot --dry-run
-```
+`reportURI` is a `data:application/json,...` URI stored on RiskRegistry.
 
 ```powershell
 npm run build:contracts
@@ -109,7 +104,6 @@ Required Vercel env:
 - `EXPLORER_API_KEY` (optional; verification still works when set)
 - `OKX_API_KEY`, `OKX_SECRET_KEY`, `OKX_API_PASSPHRASE`, `OKX_PROJECT_ID` (optional DEX quotes and name search)
 - `CRON_SECRET` (optional; locks `/api/discover` to Vercel cron)
-- `X_*` OAuth tokens to post high-risk alerts
 
 Contract deploy (testnet):
 
@@ -139,4 +133,3 @@ The script writes `shared/deployedAddresses.json`.
 - Screener, not an audit
 - Holder concentration is an on-chain sample, not a full census
 - Watchlist is per device unless you copy the list link
-- X alerts stay silent until OAuth tokens are set
