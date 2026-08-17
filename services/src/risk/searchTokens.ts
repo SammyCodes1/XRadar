@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import { searchExplorerTokens, type ExplorerNetwork } from "./explorer";
+import { searchGeckoTokens } from "./geckoSearch";
 import { searchOkxTokens, type OkxTokenHit } from "./okxDex";
 
 export type TokenSearchHit = OkxTokenHit;
@@ -34,12 +35,13 @@ export async function searchListedTokens(
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
-  const [okx, explorer] = await Promise.all([
-    chain === "mainnet" ? searchOkxTokens(trimmed).catch(() => []) : Promise.resolve([]),
-    searchExplorerTokens(chain, trimmed).catch(() => []),
+  const [gecko, okx, explorer] = await Promise.all([
+    searchGeckoTokens(trimmed),
+    searchOkxTokens(trimmed).catch(() => []),
+    searchExplorerTokens("mainnet", trimmed).catch(() => []),
   ]);
 
-  return rankHits(trimmed, [...okx, ...explorer]);
+  return rankHits(trimmed, [...gecko, ...okx, ...explorer]);
 }
 
 export type { Address };

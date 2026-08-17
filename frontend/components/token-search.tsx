@@ -22,7 +22,7 @@ import { TokenIdentity } from "./token-identity";
 import { WatchButton } from "./watch-button";
 
 export function TokenSearch() {
-  const { network, chainId, setLastScanned } = useDashboard();
+  const { network, chainId, setNetwork, setLastScanned } = useDashboard();
   const router = useRouter();
   const { rows } = useRegistryRows();
   const queryClient = useQueryClient();
@@ -95,13 +95,14 @@ export function TokenSearch() {
     }
   }, [job.phase, job.result, queryClient, setLastScanned]);
 
-  async function startScan(raw: string) {
+  async function startScan(raw: string, chain = network) {
     if (!isAddress(raw)) return;
     const address = getAddress(raw);
+    if (chain !== network) setNetwork(chain);
     setFieldError(null);
     setActiveAddress(address);
     setDialogOpen(true);
-    await job.run(address, network);
+    await job.run(address, chain);
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -135,7 +136,7 @@ export function TokenSearch() {
       return;
     }
     if (registryHits.length === 0 && extra.length === 1) {
-      await startScan(extra[0].address);
+      await startScan(extra[0].address, "mainnet");
       return;
     }
     if (registryHits.length > 0 || extra.length > 0) {
@@ -294,7 +295,7 @@ export function TokenSearch() {
                 <li key={hit.address}>
                   <button
                     type="button"
-                    onClick={() => void startScan(hit.address)}
+                    onClick={() => void startScan(hit.address, "mainnet")}
                     className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-raised"
                   >
                     <span className="min-w-0">
@@ -305,7 +306,7 @@ export function TokenSearch() {
                         {hit.address}
                       </span>
                     </span>
-                    <span className="text-[11px] text-ink-faint">Not scanned</span>
+                    <span className="text-[11px] text-ink-faint">Mainnet</span>
                   </button>
                 </li>
               ))}
