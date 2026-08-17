@@ -548,27 +548,71 @@ export function scoreFromFindings(findings: RiskFindings): RiskScore {
   };
 }
 
-function localSummary(findings: RiskFindings, _score: RiskScore): string {
-  const source = findings.verifiedContract.verified
-    ? "Source is verified."
-    : "Source is unverified.";
+function contractSnapshot(findings: RiskFindings, score: RiskScore) {
+  return {
+    address: findings.token,
+    name: findings.tokenMeta.name,
+    symbol: findings.tokenMeta.symbol,
+    decimals: findings.tokenMeta.decimals,
+    poolOkb: findings.liquiditySize.reserveWokbFormatted ?? null,
+    thinPool: findings.liquiditySize.thin,
+    verified: findings.verifiedContract.verified,
+    owner: findings.ownershipStatus.owner,
+    renounced: findings.ownershipStatus.renounced,
+    mintPresent: findings.ownershipStatus.hasMint,
+    honeypot: findings.honeypotCheck.isHoneypot,
+    buyOk: findings.buySell.buyOk,
+    sellOk: findings.buySell.sellOk,
+    lpLocked: findings.lpLockStatus.locked,
+    lpLockedPercent: findings.lpLockStatus.lockedPercent,
+    transferTaxPercent: findings.transferTax.transferTax,
+    pairTransferReverted: findings.transferTax.reverted,
+    top10SamplePercent: findings.holderConcentration.top10Percent,
+    isProxy: findings.proxy.isProxy,
+    tradingPaused: findings.tradingLimits.paused,
+    mintCallable: findings.tradingLimits.mintCallable,
+    score: score.overall,
+  };
+}
+
+function localSummary(findings: RiskFindings, score: RiskScore): string {
+  const label =
+    [findings.tokenMeta.symbol, findings.tokenMeta.name]
+      .filter(Boolean)
+      .join(" ") || "This contract";
+  const source =
+    findings.verifiedContract.verified === true
+      ? "source is verified"
+      : findings.verifiedContract.verified === false
+        ? "source is unverified"
+        : "source verification is unknown";
   const ownership = findings.ownershipStatus.renounced
-    ? "Ownership is renounced."
+    ? "ownership is renounced"
     : findings.ownershipStatus.owner
-      ? `Owner is ${findings.ownershipStatus.owner}.`
-      : "No owner() on the contract.";
-  const liquidity = findings.lpLockStatus.locked
-    ? `Liquidity is locked (${findings.lpLockStatus.lockedPercent ?? "?"}%).`
-    : "Liquidity lock is unknown or unlocked.";
-  const honeypot = findings.honeypotCheck.isHoneypot
-    ? "Honeypot detected."
-    : findings.buySell.buyOk === false || findings.buySell.sellOk === false
-      ? "Buy or sell simulation failed."
-      : "Not a honeypot.";
+      ? `owner ${findings.ownershipStatus.owner} is still active`
+      : "no owner() was found";
   const pool = findings.liquiditySize.reserveWokbFormatted
-    ? ` Pool is ${findings.liquiditySize.reserveWokbFormatted} OKB.`
-    : "";
-  return `${source} ${ownership} ${liquidity} ${honeypot}${pool}`;
+    ? findings.liquiditySize.thin
+      ? `pool is thin at ${findings.liquiditySize.reserveWokbFormatted} OKB`
+      : `pool is ${findings.liquiditySize.reserveWokbFormatted} OKB`
+    : "pool size is unknown";
+  const trade =
+    findings.honeypotCheck.isHoneypot ||
+    findings.buySell.buyOk === false ||
+    findings.buySell.sellOk === false
+      ? "buy or sell simulation failed"
+      : findings.buySell.buyOk === true && findings.buySell.sellOk === true
+        ? "buy-then-sell simulation passed"
+        : "buy/sell result is unknown";
+  return `${label} at ${findings.token}: ${source}, ${ownership}, ${pool}. ${trade}. Screener score ${score.overall}/100 for this address only.`;
+}
+
+function tidySummary(text: string): string {
+  return text
+    .replace(/\u2014/g, "-")
+    .replace(/\*\*/g, "")
+    .replace(/^["']|["']$/g, "")
+    .trim();
 }
 
 async function maybeDeepSeekSummary(
@@ -587,12 +631,17 @@ async function maybeDeepSeekSummary(
       },
       body: JSON.stringify({
         model: env.deepseekModel,
-        max_tokens: 200,
+        max_tokens: 280,
         thinking: { type: "disabled" },
         messages: [
           {
+            role: "system",
+            content:
+              "You write XRadar screener notes. Describe only the contract in the facts. Other tokens may share the same meme name. Never say safe, official, audited, or the real coin. Never invent socials or extra checks. If a field is null, say unknown. No em dashes.",
+          },
+          {
             role: "user",
-            content: `Summarize this X Layer token risk in 2 sentences. JSON: ${JSON.stringify({ findings, score })}`,
+            content: `Write 2 or 3 short sentences about this specific X Layer contract. Name the symbol and this address. State what the facts show: verified or not, OKB pool size, owner still in control or renounced, buy/sell result, tax, lock, holder sample. Facts: ${JSON.stringify(contractSnapshot(findings, score))}`,
           },
         ],
       }),
@@ -608,7 +657,7 @@ async function maybeDeepSeekSummary(
     if (!text) {
       return { summary: localSummary(findings, score), model: "local-heuristic" };
     }
-    return { summary: text, model: env.deepseekModel };
+    return { summary: tidySummary(text), model: env.deepseekModel };
   } catch {
     return { summary: localSummary(findings, score), model: "local-heuristic" };
   }
