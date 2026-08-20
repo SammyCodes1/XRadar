@@ -7,7 +7,7 @@ import type { Address } from "viem";
 import { isAddress } from "viem";
 import { useReadContracts } from "wagmi";
 import type { XLayerNetwork } from "@xradar/shared";
-import { timeSince } from "../lib/format";
+import { timeSince, tokenDisplayName } from "../lib/format";
 import {
   RISK_REGISTRY_ABI,
   explorerTokenUrl,
@@ -155,8 +155,8 @@ export function WatchlistView({
         ) : null}
 
         {mine.length > 0 ? (
-          <ul className="scan-bezel mt-8">
-            <div className="scan-well divide-y divide-line">
+          <div className="scan-bezel mt-8">
+            <ul className="scan-well divide-y divide-line">
               {mine.map((item, index) => {
                 const parsed = parseScoreResult(scoresQuery.data?.[index]?.result);
                 const report = decodeReportUri(parsed?.reportURI ?? "");
@@ -184,7 +184,7 @@ export function WatchlistView({
                           </a>
                         </div>
                         <p className="mt-1 truncate text-xs text-ink-muted">
-                          {[symbol, name].filter(Boolean).join(" ") || "Unnamed contract"}
+                          {tokenDisplayName(symbol, name, "Unnamed contract")}
                           {report.token?.poolOkb ? ` · ${report.token.poolOkb} OKB` : ""}
                         </p>
                         {scanned ? (
@@ -212,8 +212,8 @@ export function WatchlistView({
                   </li>
                 );
               })}
-            </div>
-          </ul>
+            </ul>
+          </div>
         ) : null}
       </main>
     </div>

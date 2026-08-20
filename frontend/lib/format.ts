@@ -7,6 +7,19 @@ export function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+export function tokenDisplayName(
+  symbol?: string,
+  name?: string,
+  fallback = "Unnamed",
+): string {
+  const sym = symbol?.trim() || undefined;
+  const nam = name?.trim() || undefined;
+  if (sym && nam && sym.toLowerCase() !== nam.toLowerCase()) {
+    return `${sym} · ${nam}`;
+  }
+  return sym || nam || fallback;
+}
+
 export function riskLevel(score: number): RiskLevel {
   if (score >= 67) return "high";
   if (score >= 34) return "medium";

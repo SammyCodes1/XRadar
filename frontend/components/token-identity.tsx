@@ -1,3 +1,5 @@
+import { tokenDisplayName } from "../lib/format";
+
 export function TokenIdentity({
   symbol,
   name,
@@ -11,7 +13,7 @@ export function TokenIdentity({
   poolOkb?: string;
   align?: "left" | "right";
 }) {
-  const title = [symbol, name].filter(Boolean).join(" ");
+  const title = tokenDisplayName(symbol, name, "");
   const bits = [
     decimals != null ? `${decimals} decimals` : null,
     poolOkb ? `Pool ${poolOkb} OKB` : null,

@@ -271,7 +271,11 @@ function hitFromRow(row: unknown): OkxTokenHit | null {
     (typeof rec.name === "string" && rec.name) ||
     (typeof nested?.tokenName === "string" && nested.tokenName) ||
     undefined;
-  return { address, symbol, name };
+  return {
+    address,
+    symbol,
+    name: name && name !== symbol ? name : undefined,
+  };
 }
 
 let allTokensCache: { at: number; hits: OkxTokenHit[] } | null = null;

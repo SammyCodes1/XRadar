@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getAddress, isAddress } from "viem";
+import { tokenDisplayName } from "../lib/format";
 import { iosSpring } from "../lib/motion";
 import { explorerTxUrl } from "../lib/registry";
 import { decodeReportUri } from "../lib/report";
@@ -21,6 +22,13 @@ import { ShareActions } from "./share-actions";
 import { TokenIdentity } from "./token-identity";
 import { WatchButton } from "./watch-button";
 
+type ListedHit = {
+  address: string;
+  symbol?: string;
+  name?: string;
+  chain?: "mainnet" | "testnet";
+};
+
 export function TokenSearch() {
   const { network, chainId, setNetwork, setLastScanned } = useDashboard();
   const router = useRouter();
@@ -32,10 +40,9 @@ export function TokenSearch() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [activeAddress, setActiveAddress] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [okxHits, setOkxHits] = useState<
-    { address: string; symbol?: string; name?: string }[]
-  >([]);
+  const [okxHits, setOkxHits] = useState<ListedHit[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchDone, setSearchDone] = useState(false);
 
   const query = value.trim();
   const registryHits = useMemo(() => {
@@ -61,31 +68,52 @@ export function TokenSearch() {
       .slice(0, 6);
   }, [query, rows]);
 
+  const listedHits = useMemo(() => {
+    const known = new Set(registryHits.map((hit) => hit.address.toLowerCase()));
+    return okxHits.filter((hit) => !known.has(hit.address.toLowerCase()));
+  }, [okxHits, registryHits]);
+
+  const showSuggestions =
+    query.length >= 2 &&
+    !isAddress(query) &&
+    (searching || searchDone || registryHits.length > 0);
+
   useEffect(() => {
     if (query.length < 2 || isAddress(query)) {
       setOkxHits([]);
       setSearching(false);
+      setSearchDone(false);
       return;
     }
+    setOkxHits([]);
+    setSearching(true);
+    setSearchDone(false);
+    const controller = new AbortController();
     const handle = window.setTimeout(() => {
-      setSearching(true);
       void fetch(
         `/api/search?q=${encodeURIComponent(query)}&chain=${network}`,
+        { signal: controller.signal },
       )
         .then((response) => response.json())
-        .then((body: { hits?: { address: string; symbol?: string; name?: string }[] }) => {
-          const known = new Set(registryHits.map((hit) => hit.address.toLowerCase()));
-          setOkxHits(
-            (body.hits ?? []).filter(
-              (hit) => !known.has(hit.address.toLowerCase()),
-            ),
-          );
+        .then((body: { hits?: ListedHit[] }) => {
+          setOkxHits(body.hits ?? []);
+          setSearchDone(true);
         })
-        .catch(() => setOkxHits([]))
-        .finally(() => setSearching(false));
+        .catch((error: unknown) => {
+          if (controller.signal.aborted) return;
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setOkxHits([]);
+          setSearchDone(true);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false);
+        });
     }, 280);
-    return () => window.clearTimeout(handle);
-  }, [query, registryHits, network]);
+    return () => {
+      window.clearTimeout(handle);
+      controller.abort();
+    };
+  }, [query, network]);
 
   useEffect(() => {
     if (job.phase !== "success" || !job.result) return;
@@ -113,30 +141,29 @@ export function TokenSearch() {
       return;
     }
     setSearching(true);
-    let listed: { address: string; symbol?: string; name?: string }[] = [];
+    let listed: ListedHit[] = [];
     try {
       const response = await fetch(
         `/api/search?q=${encodeURIComponent(raw)}&chain=${network}`,
       );
-      const body = (await response.json()) as {
-        hits?: { address: string; symbol?: string; name?: string }[];
-      };
+      const body = (await response.json()) as { hits?: ListedHit[] };
       listed = body.hits ?? [];
     } catch {
       listed = [];
     } finally {
       setSearching(false);
+      setSearchDone(true);
     }
+    setOkxHits(listed);
     const known = new Set(registryHits.map((hit) => hit.address.toLowerCase()));
     const extra = listed.filter((hit) => !known.has(hit.address.toLowerCase()));
-    setOkxHits(extra);
 
     if (registryHits.length === 1 && extra.length === 0) {
       router.push(`/token/${registryHits[0].address}?chain=${network}`);
       return;
     }
     if (registryHits.length === 0 && extra.length === 1) {
-      await startScan(extra[0].address, "mainnet");
+      await startScan(extra[0].address, extra[0].chain ?? "mainnet");
       return;
     }
     if (registryHits.length > 0 || extra.length > 0) {
@@ -233,14 +260,12 @@ export function TokenSearch() {
               />
               <motion.button
                 type="submit"
-                disabled={job.phase === "running" || searching}
+                disabled={job.phase === "running"}
                 whileHover={
-                  reduce || job.phase === "running" || searching
-                    ? undefined
-                    : { scale: 1.02 }
+                  reduce || job.phase === "running" ? undefined : { scale: 1.02 }
                 }
                 whileTap={
-                  job.phase === "running" || searching ? undefined : { scale: 0.97 }
+                  job.phase === "running" ? undefined : { scale: 0.97 }
                 }
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-accent px-6 text-sm font-medium text-on-accent hover:bg-accent-hot disabled:opacity-60 sm:min-h-14"
               >
@@ -265,11 +290,16 @@ export function TokenSearch() {
           ) : null}
         </motion.div>
 
-        {registryHits.length > 0 || okxHits.length > 0 ? (
-          <ul className="scan-bezel mt-3">
-            <div className="scan-well divide-y divide-line">
+        {showSuggestions ? (
+          <div className="scan-bezel mt-3">
+            <ul className="scan-well divide-y divide-line">
+              {searching && registryHits.length === 0 && listedHits.length === 0 ? (
+                <li className="px-4 py-3 text-sm text-ink-muted" aria-live="polite">
+                  Searching X Layer…
+                </li>
+              ) : null}
               {registryHits.map((hit) => (
-                <li key={hit.address}>
+                <li key={`registry:${hit.address}`}>
                   <button
                     type="button"
                     onClick={() =>
@@ -279,7 +309,7 @@ export function TokenSearch() {
                   >
                     <span className="min-w-0">
                       <span className="block truncate text-sm text-ink">
-                        {[hit.symbol, hit.name].filter(Boolean).join(" ") || "Unnamed"}
+                        {tokenDisplayName(hit.symbol, hit.name)}
                       </span>
                       <span className="mt-0.5 block truncate font-mono text-[11px] text-ink-muted">
                         {hit.address}
@@ -291,27 +321,43 @@ export function TokenSearch() {
                   </button>
                 </li>
               ))}
-              {okxHits.map((hit) => (
-                <li key={hit.address}>
-                  <button
-                    type="button"
-                    onClick={() => void startScan(hit.address, "mainnet")}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-raised"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm text-ink">
-                        {[hit.symbol, hit.name].filter(Boolean).join(" ") || "Unnamed"}
+              {listedHits.map((hit) => {
+                const chain = hit.chain === "testnet" ? "testnet" : "mainnet";
+                return (
+                  <li key={`${chain}:${hit.address}`}>
+                    <button
+                      type="button"
+                      onClick={() => void startScan(hit.address, chain)}
+                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-raised"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm text-ink">
+                          {tokenDisplayName(hit.symbol, hit.name)}
+                        </span>
+                        <span className="mt-0.5 block truncate font-mono text-[11px] text-ink-muted">
+                          {hit.address}
+                        </span>
                       </span>
-                      <span className="mt-0.5 block truncate font-mono text-[11px] text-ink-muted">
-                        {hit.address}
-                      </span>
-                    </span>
-                    <span className="text-[11px] text-ink-faint">Mainnet</span>
-                  </button>
+                      {chain !== network ? (
+                        <span className="text-[11px] text-ink-faint">
+                          {chain === "mainnet" ? "Mainnet" : "Testnet"}
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+              {searchDone &&
+              !searching &&
+              registryHits.length === 0 &&
+              listedHits.length === 0 ? (
+                <li className="px-4 py-3 text-sm text-ink-muted" aria-live="polite">
+                  No token with that name on X Layer yet. Try another spelling
+                  or paste the 0x address.
                 </li>
-              ))}
-            </div>
-          </ul>
+              ) : null}
+            </ul>
+          </div>
         ) : null}
 
         <AnimatePresence>
